@@ -1,95 +1,81 @@
-import * as React from 'react';
-import { View } from 'react-native';
-import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from 'react-native-reanimated';
-import { Info } from '~/lib/icons/Info';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Button } from '~/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card';
-import { Progress } from '~/components/ui/progress';
-import { Text } from '~/components/ui/text';
-import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import Colors from '@/constants/Colors';
+import { defaultStyles } from '@/constants/Styles';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import Background from '@/components/Background';
+import Logo from '@/assets/images/Logo.svg';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { StatusBar } from 'expo-status-bar';
 
-const GITHUB_AVATAR_URI =
-  'https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg';
+SplashScreen.preventAutoHideAsync();
 
-export default function Screen() {
-  const [progress, setProgress] = React.useState(78);
+const Page = () => {
+  const router = useRouter();
+  
+  const [fontsLoaded] = useFonts({
+  });
 
-  function updateProgressValue() {
-    setProgress(Math.floor(Math.random() * 100));
+  useEffect(() => {
+    const prepare = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        router.replace('./login');
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        await SplashScreen.hideAsync();
+      }
+    };
+
+    if (fontsLoaded) {
+      prepare();
+    }
+  }, [fontsLoaded, router]);
+
+  if (!fontsLoaded) {
+    return null;
   }
+
   return (
-    <View className='flex-1 justify-center items-center gap-5 p-6 bg-secondary/30'>
-      <Card className='w-full max-w-sm p-6 rounded-2xl'>
-        <CardHeader className='items-center'>
-          <Avatar alt="Rick Sanchez's Avatar" className='w-24 h-24'>
-            <AvatarImage source={{ uri: GITHUB_AVATAR_URI }} />
-            <AvatarFallback>
-              <Text>RS</Text>
-            </AvatarFallback>
-          </Avatar>
-          <View className='p-3' />
-          <CardTitle className='pb-2 text-center'>Rick Sanchez</CardTitle>
-          <View className='flex-row'>
-            <CardDescription className='text-base font-semibold'>Scientist</CardDescription>
-            <Tooltip delayDuration={150}>
-              <TooltipTrigger className='px-2 pb-0.5 active:opacity-50'>
-                <Info size={14} strokeWidth={2.5} className='w-4 h-4 text-foreground/70' />
-              </TooltipTrigger>
-              <TooltipContent className='py-2 px-4 shadow'>
-                <Text className='native:text-lg'>Freelance</Text>
-              </TooltipContent>
-            </Tooltip>
-          </View>
-        </CardHeader>
-        <CardContent>
-          <View className='flex-row justify-around gap-3'>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Dimension</Text>
-              <Text className='text-xl font-semibold'>C-137</Text>
-            </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Age</Text>
-              <Text className='text-xl font-semibold'>70</Text>
-            </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Species</Text>
-              <Text className='text-xl font-semibold'>Human</Text>
+    <Background>
+      <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar style="light" backgroundColor={Colors.primary} />
+        <View style={styles.content}>
+          <View style={styles.topContainer}>
+            <Logo />
+            <View style={{ alignContent: 'center', alignItems: 'center' }}>
+              <Text style={[defaultStyles.header, { color: Colors.secondary, textTransform: 'uppercase' }]}>
+                Rizq <Text style={{ color: 'white' }}>Tracker</Text>
+              </Text>
+              <Text style={[defaultStyles.subheader]}>
+                Solusi bijak finansialmu!
+              </Text>
             </View>
           </View>
-        </CardContent>
-        <CardFooter className='flex-col gap-3 pb-0'>
-          <View className='flex-row items-center overflow-hidden'>
-            <Text className='text-sm text-muted-foreground'>Productivity:</Text>
-            <LayoutAnimationConfig skipEntering>
-              <Animated.View
-                key={progress}
-                entering={FadeInUp}
-                exiting={FadeOutDown}
-                className='w-11 items-center'
-              >
-                <Text className='text-sm font-bold text-sky-600'>{progress}%</Text>
-              </Animated.View>
-            </LayoutAnimationConfig>
-          </View>
-          <Progress value={progress} className='h-2' indicatorClassName='bg-sky-600' />
-          <View />
-          <Button
-            variant='outline'
-            className='shadow shadow-foreground/5'
-            onPress={updateProgressValue}
-          >
-            <Text>Update</Text>
-          </Button>
-        </CardFooter>
-      </Card>
-    </View>
+        </View>
+      </SafeAreaView>
+    </Background>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  topContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16, 
+  },
+  logo: {
+    marginBottom: 8,
+  },
+});
+
+export default Page;

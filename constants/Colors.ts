@@ -1,0 +1,11 @@
+export default {
+  primary: '#61B7AA',
+  primaryDark: '#3D7D74',
+  primaryMuted: '#A3D6C8',
+  secondary: '#F0A33C',
+  secondaryMuted: '#F2D6B8',
+  background: '#F5F5F5',
+  dark: '#141518',
+  gray: '#626D77',
+  lightGray: '#D8DCE2',
+};
