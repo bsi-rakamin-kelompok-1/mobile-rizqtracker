@@ -7,68 +7,116 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   BackHandler,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAdaptiveToast } from '@/utils/toast';
+import { useAuthStore } from '@/store/auth-store';
 
 const Page = () => {
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
   const router = useRouter();
+  const toast = useAdaptiveToast();
+
+  // Use auth store
+  const { login, isLoading } = useAuthStore();
+
+  // Local state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Track if back was pressed once
     let backPressedOnce = false;
-    
+
     const handleBackPress = () => {
       if (backPressedOnce) {
         // If pressed twice, exit the app
         BackHandler.exitApp();
         return true;
       }
-      
+
       // First press
       backPressedOnce = true;
-      Alert.alert(
-        'Exit App', 
-        'Press back again to exit the app.',
-        [{ text: 'OK' }],
-        { cancelable: true }
-      );
-      
+      toast.info('Exit App', {
+        description: 'Press back again to exit the app.',
+        duration: 2000,
+      });
+
       // Reset the backPressedOnce flag after 2 seconds
       setTimeout(() => {
         backPressedOnce = false;
       }, 2000);
-      
+
       return true; // Prevent default behavior
     };
-    
+
     // Add back press event listener
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress
+    );
+
     // Clean up
     return () => backHandler.remove();
-  }, []);
+  }, [toast]);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+  const validateInputs = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    if (!validateInputs()) {
       return;
     }
 
-    // Here you would typically call your authentication API
-    // For now, we'll just simulate a successful login
-    router.replace('./(authenticated)/(tabs)');
+    try {
+      // Use the login action from auth store
+      const user = await login(email, password);
+
+      // Show success toast
+      toast.success('Login berhasil!', {
+        description: `Selamat datang, ${user.full_name}!`,
+        duration: 3000,
+        onDismiss: () => router.replace('./(authenticated)/(tabs)'),
+      });
+
+      // Navigate to authenticated area
+      router.replace('./(authenticated)/(tabs)');
+    } catch (error: any) {
+      // Handle specific error responses
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[0] ||
+        'Login failed. Please check your credentials.';
+
+      // Show error toast
+      toast.error('Login gagal', {
+        description: errorMessage,
+        duration: 4000,
+      });
+    }
   };
 
   return (
@@ -93,11 +141,14 @@ const Page = () => {
                 <Input
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="viona@gmail.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                  placeholder='viona.amalia@gmail.com'
+                  keyboardType='email-address'
+                  autoCapitalize='none'
                   style={styles.input}
                 />
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                )}
               </View>
             </View>
 
@@ -107,33 +158,43 @@ const Page = () => {
                 <Input
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Asik12345"
+                  placeholder='Rahasia123#'
                   secureTextEntry={!showPassword}
                   style={styles.input}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
                 >
                   <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
                     color={Colors.gray}
                   />
                 </TouchableOpacity>
+                {errors.password && (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                )}
               </View>
             </View>
 
-            <Button 
-              style={styles.loginButton} 
+            <Button
+              style={styles.loginButton}
               onPress={handleLogin}
+              disabled={isLoading}
             >
-              <Text style={styles.loginButtonText}>Masuk</Text>
+              {isLoading ? (
+                <ActivityIndicator color='white' />
+              ) : (
+                <Text style={styles.loginButtonText}>Masuk</Text>
+              )}
             </Button>
 
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Belum punya akun? Registrasi </Text>
-              <Link href="./register" asChild>
+              <Text style={styles.registerText}>
+                Belum punya akun? Registrasi{' '}
+              </Text>
+              <Link href='./register' asChild>
                 <TouchableOpacity>
                   <Text style={styles.registerLink}>disini</Text>
                 </TouchableOpacity>
@@ -229,6 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.primary,
     fontWeight: '600',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

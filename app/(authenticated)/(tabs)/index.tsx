@@ -6,7 +6,7 @@ export default function AuthenticatedHome() {
   const router = useRouter();
   
   const handleLogout = () => {
-    router.replace('/');
+    router.replace('/login');
   };
 
   return (

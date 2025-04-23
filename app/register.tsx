@@ -13,43 +13,112 @@ import {
   Alert,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBar } from 'expo-status-bar';
+import { register } from '@/lib/api/auth';
+import { toast } from 'sonner-native';
+import { useAdaptiveToast } from '@/utils/toast';
+
 
 const Page = () => {
   const router = useRouter();
+  const toast = useAdaptiveToast();
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [profileUrl, setProfileUrl] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleRegister = () => {
-    if (!email || !fullName || !phoneNumber || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all required fields');
+  const validateInputs = () => {
+    const newErrors: Record<string, string> = {};
+
+    // if (!email) {
+    //   newErrors.email = 'Email is required';
+    // } else if (!/\S+@\S+\.\S+/.test(email)) {
+    //   newErrors.email = 'Invalid email format';
+    // }
+
+    // if (!fullName) {
+    //   newErrors.fullName = 'Full name is required';
+    // }
+
+    // if (!phoneNumber) {
+    //   newErrors.phoneNumber = 'Phone number is required';
+    // } else if (!/^62\d{9,12}$/.test(phoneNumber)) {
+    //   newErrors.phoneNumber = 'Phone number must start with 62 and be 11-14 digits';
+    // }
+
+    // if (!password) {
+    //   newErrors.password = 'Password is required';
+    // } else if (password.length < 8) {
+    //   newErrors.password = 'Password must be at least 8 characters';
+    // }
+
+    // if (password !== confirmPassword) {
+    //   newErrors.confirmPassword = 'Passwords do not match';
+    // }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegister = async () => {
+    // const colorScheme = useColorScheme();
+    // const iconColor = colorScheme === 'dark' ? 'white' : 'black';
+
+    if (!validateInputs()) {
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
+    try {
+      setIsLoading(true);
 
-    // Here you would typically call your registration API
-    // For now, we'll just simulate a successful registration
-    Alert.alert('Success', 'Registration successful!', [
-      { text: 'OK', onPress: () => router.replace('./login') },
-    ]);
+      const response = await register({
+        email,
+        password,
+        confirm_password: confirmPassword,
+        full_name: fullName,
+        phone_number: phoneNumber,
+      });
+
+      // Replace Alert with toast
+      toast.success('Registrasi berhasil!', {
+        description: 'Silakan login dengan akun baru Anda.',
+        duration: 4000,
+        onDismiss: () => router.replace('./login'),
+      });
+
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.replace('./login');
+      }, 2000);
+    } catch (error: any) {
+      // Handle specific error responses
+      const errorMessage =
+        error.response?.data?.errors[0] ||
+        'Registration failed. Please try again.';
+
+      // Replace Alert with toast for error
+      toast.error('Registrasi gagal', {
+        description: errorMessage,
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor={Colors.primary} />
+      <StatusBar style='light' backgroundColor={Colors.primary} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -73,13 +142,21 @@ const Page = () => {
                 <View style={styles.inputWrapper}>
                   <Input
                     value={email}
-                    onChangeText={setEmail}
-                    placeholder="viona.amalia@gmail.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errors.email) {
+                        setErrors({ ...errors, email: '' });
+                      }
+                    }}
+                    placeholder='viona.amalia@gmail.com'
+                    keyboardType='email-address'
+                    autoCapitalize='none'
                     style={styles.input}
                   />
                 </View>
+                {errors.email ? (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                ) : null}
               </View>
 
               <View style={styles.inputGroup}>
@@ -87,11 +164,19 @@ const Page = () => {
                 <View style={styles.inputWrapper}>
                   <Input
                     value={fullName}
-                    onChangeText={setFullName}
-                    placeholder="Viona Amalia"
+                    onChangeText={(text) => {
+                      setFullName(text);
+                      if (errors.fullName) {
+                        setErrors({ ...errors, fullName: '' });
+                      }
+                    }}
+                    placeholder='Viona Amalia'
                     style={styles.input}
                   />
                 </View>
+                {errors.fullName ? (
+                  <Text style={styles.errorText}>{errors.fullName}</Text>
+                ) : null}
               </View>
 
               <View style={styles.inputGroup}>
@@ -99,12 +184,20 @@ const Page = () => {
                 <View style={styles.inputWrapper}>
                   <Input
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    placeholder="6281234567890"
-                    keyboardType="phone-pad"
+                    onChangeText={(text) => {
+                      setPhoneNumber(text);
+                      if (errors.phoneNumber) {
+                        setErrors({ ...errors, phoneNumber: '' });
+                      }
+                    }}
+                    placeholder='628123456789'
+                    keyboardType='phone-pad'
                     style={styles.input}
                   />
                 </View>
+                {errors.phoneNumber ? (
+                  <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+                ) : null}
               </View>
 
               <View style={styles.inputGroup}>
@@ -112,22 +205,30 @@ const Page = () => {
                 <View style={styles.inputWrapper}>
                   <Input
                     value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password) {
+                        setErrors({ ...errors, password: '' });
+                      }
+                    }}
+                    placeholder='••••••••'
                     secureTextEntry={!showPassword}
                     style={styles.input}
                   />
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                     style={styles.eyeIcon}
                   >
                     <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={20}
                       color={Colors.gray}
                     />
                   </TouchableOpacity>
                 </View>
+                {errors.password ? (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                ) : null}
               </View>
 
               <View style={styles.inputGroup}>
@@ -135,34 +236,52 @@ const Page = () => {
                 <View style={styles.inputWrapper}>
                   <Input
                     value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="••••••••"
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword) {
+                        setErrors({ ...errors, confirmPassword: '' });
+                      }
+                    }}
+                    placeholder='••••••••'
                     secureTextEntry={!showConfirmPassword}
                     style={styles.input}
                   />
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={styles.eyeIcon}
                   >
                     <Ionicons
-                      name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                      name={
+                        showConfirmPassword ? 'eye-off-outline' : 'eye-outline'
+                      }
                       size={20}
                       color={Colors.gray}
                     />
                   </TouchableOpacity>
                 </View>
+                {errors.confirmPassword ? (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                ) : null}
               </View>
 
-              <Button 
-                style={styles.registerButton} 
+              <Button
+                style={[
+                  styles.registerButton,
+                  isLoading ? styles.disabledButton : null,
+                ]}
                 onPress={handleRegister}
+                disabled={isLoading}
               >
-                <Text style={styles.registerButtonText}>Daftar</Text>
+                {isLoading ? (
+                  <ActivityIndicator color='white' size='small' />
+                ) : (
+                  <Text style={styles.registerButtonText}>Daftar</Text>
+                )}
               </Button>
 
               <View style={styles.loginContainer}>
                 <Text style={styles.loginText}>Sudah punya akun? Masuk </Text>
-                <Link href="./login" asChild>
+                <Link href='./login' asChild>
                   <TouchableOpacity>
                     <Text style={styles.loginLink}>disini</Text>
                   </TouchableOpacity>
@@ -242,6 +361,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 16,
   },
+  disabledButton: {
+    backgroundColor: Colors.primaryMuted,
+  },
   registerButtonText: {
     color: 'white',
     fontSize: 16,
@@ -261,6 +383,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.primary,
     fontWeight: '600',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 
