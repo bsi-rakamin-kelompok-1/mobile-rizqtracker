@@ -251,7 +251,7 @@ export default function AuthenticatedHome() {
                     activeTab === 'pemasukan' && styles.activeTabText,
                   ]}
                 >
-                  Pemasukan
+                  Pemasukan 
                 </Text>
               </TouchableOpacity>
 
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    borderRadius: 25,
+    borderRadius: 8,
     backgroundColor: Colors.lightGray,
     overflow: 'hidden',
     marginBottom: 16,
