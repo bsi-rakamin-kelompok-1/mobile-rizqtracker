@@ -96,6 +96,7 @@ const InitialLayout = () => {
           headerBackTitle: '',
           headerShadowVisible: false,
           headerBackVisible: false,
+          headerShown: false,
           headerStyle: { backgroundColor: Colors.primary },
         }}
       />
