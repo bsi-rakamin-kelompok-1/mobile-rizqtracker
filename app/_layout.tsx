@@ -74,6 +74,17 @@ const InitialLayout = () => {
       />
 
       <Stack.Screen
+        name='create-pin'
+        options={{
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerBackVisible: false,
+          headerStyle: { backgroundColor: Colors.primary },
+        }}
+      />
+
+      <Stack.Screen
         name='help'
         options={{ title: 'Help', presentation: 'modal' }}
       />

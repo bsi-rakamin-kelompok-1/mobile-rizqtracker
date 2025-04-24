@@ -18,14 +18,13 @@ const Page = () => {
 
   console.log('Auth state:', state);
 
-  const [fontsLoaded] = useFonts({
-  });
+  const [fontsLoaded] = useFonts({});
 
   useEffect(() => {
     const prepare = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         router.replace('./login');
       } catch (e) {
         console.warn(e);
@@ -46,12 +45,17 @@ const Page = () => {
   return (
     <Background>
       <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar style="light" backgroundColor={Colors.primary} />
+        <StatusBar style='light' backgroundColor={Colors.primary} />
         <View style={styles.content}>
           <View style={styles.topContainer}>
             <Logo />
             <View style={{ alignContent: 'center', alignItems: 'center' }}>
-              <Text style={[defaultStyles.header, { color: Colors.secondary, textTransform: 'uppercase' }]}>
+              <Text
+                style={[
+                  defaultStyles.header,
+                  { color: Colors.secondary, textTransform: 'uppercase' },
+                ]}
+              >
                 Rizq <Text style={{ color: 'white' }}>Tracker</Text>
               </Text>
               <Text style={[defaultStyles.subheader]}>
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
   topContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16, 
+    gap: 16,
   },
   logo: {
     marginBottom: 8,

@@ -1,5 +1,4 @@
 import Colors from '@/constants/Colors';
-import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
@@ -158,7 +157,7 @@ const Page = () => {
                 <Input
                   value={password}
                   onChangeText={setPassword}
-                  placeholder='Rahasia123#'
+                  placeholder='••••••••'
                   secureTextEntry={!showPassword}
                   style={styles.input}
                 />

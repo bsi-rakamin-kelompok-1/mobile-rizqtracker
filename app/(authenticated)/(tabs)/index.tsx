@@ -9,7 +9,7 @@ export default function AuthenticatedHome() {
   const authStore = useAuthStore();
 
   console.log('Auth state:', authStore);
-  
+
   const handleLogout = () => {
     authStore.logout();
     toast.success('Logout berhasil', {
@@ -31,10 +31,7 @@ export default function AuthenticatedHome() {
         <Text style={styles.growthText}>+5.3% this month</Text>
       </View>
 
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </View>
@@ -102,5 +99,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  }
+  },
 });

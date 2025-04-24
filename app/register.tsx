@@ -1,5 +1,4 @@
 import Colors from '@/constants/Colors';
-import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -10,28 +9,26 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
-  useColorScheme,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBar } from 'expo-status-bar';
-import { register } from '@/lib/api/auth';
-import { toast } from 'sonner-native';
 import { useAdaptiveToast } from '@/utils/toast';
-
+import { register } from '@/lib/api/auth';
+import { useAuthStore } from '@/store/auth-store';
 
 const Page = () => {
   const router = useRouter();
   const toast = useAdaptiveToast();
-  const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { login: loginStore } = useAuthStore();
+  const [email, setEmail] = useState('rihlan1@gmail.com');
+  const [fullName, setFullName] = useState('Bear Dummy');
+  const [phoneNumber, setPhoneNumber] = useState('6281244442223');
+  const [password, setPassword] = useState('Validpassword123#');
+  const [confirmPassword, setConfirmPassword] = useState('Validpassword123#');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,9 +68,6 @@ const Page = () => {
   };
 
   const handleRegister = async () => {
-    // const colorScheme = useColorScheme();
-    // const iconColor = colorScheme === 'dark' ? 'white' : 'black';
-
     if (!validateInputs()) {
       return;
     }
@@ -89,27 +83,22 @@ const Page = () => {
         phone_number: phoneNumber,
       });
 
-      // Replace Alert with toast
-      toast.success('Registrasi berhasil!', {
-        description: 'Silakan login dengan akun baru Anda.',
-        duration: 4000,
-        onDismiss: () => router.replace('./login'),
-      });
+      if (response.success) {
+        await loginStore(email, password);
+      }
 
-      // Redirect after a short delay
-      setTimeout(() => {
-        router.replace('./login');
-      }, 2000);
+      router.replace('./create-pin');
     } catch (error: any) {
       // Handle specific error responses
       const errorMessage =
-        error.response?.data?.errors[0] ||
-        'Registration failed. Please try again.';
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[0] ||
+        'Registrasi gagal';
 
-      // Replace Alert with toast for error
+      // Show error toast
       toast.error('Registrasi gagal', {
         description: errorMessage,
-        duration: 5000,
+        duration: 4000,
       });
     } finally {
       setIsLoading(false);
