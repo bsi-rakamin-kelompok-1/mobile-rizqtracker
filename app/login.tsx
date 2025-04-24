@@ -99,7 +99,7 @@ const Page = () => {
       // Show success toast
       toast.success('Login berhasil!', {
         description: `Selamat datang, ${user.full_name}!`,
-        duration: 3000,
+        duration: 2000,
         onDismiss: () => router.replace('./(authenticated)/(tabs)'),
       });
 

@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { View, StyleSheet } from 'react-native';
+import { defaultStyles } from '@/constants/Styles';
 
 export default function TabsLayout() {
   return (
@@ -10,14 +11,13 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.gray,
         tabBarStyle: {
+          flexDirection: 'row',
+          justifyContent: 'space-around',
           height: 100,
-          paddingTop: 26,
+          paddingTop: 20,
           borderRadius: 15,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          elevation: 5,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    marginTop: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },

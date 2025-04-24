@@ -13,13 +13,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useAuthStore } from '@/store/auth-store';
+import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 import { DonutChart } from '@/components/DonutChart';
+import { defaultStyles } from '@/constants/Styles';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
   const authStore = useAuthStore();
-  const [showBalance, setShowBalance] = useState(true);
+  const [showBalance, setShowBalance] = useState(false);
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [activeTab, setActiveTab] = useState('pemasukan');
 
   // Mock data - replace with actual API calls/state management
@@ -98,6 +101,15 @@ export default function AuthenticatedHome() {
     setShowBalance(!showBalance);
   };
 
+  const toggleAccountNumber = () => {
+    setShowAccountNumber(!showAccountNumber);
+  };
+
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync(userData.accountNumber);
+    toast.success('Nomor rekening disalin ke clipboard');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle='dark-content' backgroundColor={Colors.background} />
@@ -107,19 +119,31 @@ export default function AuthenticatedHome() {
           <View style={styles.header}>
             <View style={styles.greetingContainer}>
               <Text style={styles.greeting}>
-                Assalamualaikum, {userData.name}!
+                Assalamu'alaikum, {userData.name}!
               </Text>
               <Text style={styles.subGreeting}>
-                Berikut adalah catatan finansialmu.
+                Selamat datang di Rizqtracker
               </Text>
             </View>
-            <Image source={{ uri: userData.avatarUrl }} style={styles.avatar} />
+            <Image
+              source={require('@/assets/images/sagiri.jpeg')}
+              style={styles.avatar}
+            />
           </View>
 
           {/* Balance Card */}
           <View style={styles.balanceCard}>
-            <View style={styles.balanceHeader}>
-              <Text style={styles.balanceLabel}>Saldo</Text>
+            <Text style={styles.walletHeader}>Wallet utama</Text>
+            <View style={styles.accountNumberContainer}>
+              <Text style={styles.accountNumber}>{userData.accountNumber}</Text>
+              <TouchableOpacity onPress={copyToClipboard}>
+                <Ionicons name='copy-outline' size={20} color='#FFF' />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.balanceContainer}>
+              <Text style={styles.balanceAmount}>
+                {showBalance ? formatCurrency(userData.balance) : 'Rp ••••••••'}
+              </Text>
               <TouchableOpacity onPress={toggleBalance}>
                 <Ionicons
                   name={showBalance ? 'eye-outline' : 'eye-off-outline'}
@@ -127,47 +151,6 @@ export default function AuthenticatedHome() {
                   color='#FFF'
                 />
               </TouchableOpacity>
-            </View>
-            <Text style={styles.balanceAmount}>
-              {showBalance ? formatCurrency(userData.balance) : '• • • • • •'}
-            </Text>
-
-            {/* Quick Actions */}
-            <View style={styles.quickActionContainer}>
-              <View style={styles.quickActions}>
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons
-                      name='arrow-up-circle'
-                      size={22}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <Text style={styles.quickActionText}>Top Up</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons
-                      name='swap-horizontal'
-                      size={22}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <Text style={styles.quickActionText}>Transfer</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name='qr-code' size={22} color={Colors.primary} />
-                  </View>
-                  <Text style={styles.quickActionText}>Brizaqsi</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.accountNumber}>
-                Nomor Rekening: {userData.accountNumber}
-              </Text>
             </View>
           </View>
 
@@ -193,10 +176,16 @@ export default function AuthenticatedHome() {
             <View style={styles.summaryData}>
               <View style={styles.summaryItem}>
                 <Ionicons
-                  name='stats-chart'
+                  name='podium'
                   size={18}
                   color={Colors.secondary}
+                  style={{
+                    padding: 4,
+                    borderRadius: 8,
+                    backgroundColor: 'white',
+                  }}
                 />
+
                 <View style={{ flex: 1, paddingLeft: 8 }}>
                   <Text style={styles.summaryLabel}>Selisih</Text>
                   <Text style={styles.summaryAmount}>
@@ -206,7 +195,16 @@ export default function AuthenticatedHome() {
               </View>
 
               <View style={styles.summaryItem}>
-                <Ionicons name='arrow-down' size={18} color='red' />
+                <Ionicons
+                  name='arrow-down'
+                  size={18}
+                  color='red'
+                  style={{
+                    padding: 4,
+                    borderRadius: 8,
+                    backgroundColor: 'white',
+                  }}
+                />
                 <View style={{ flex: 1, paddingLeft: 8 }}>
                   <Text style={styles.summaryLabel}>Pengeluaran</Text>
                   <Text style={styles.summaryAmount}>
@@ -216,7 +214,16 @@ export default function AuthenticatedHome() {
               </View>
 
               <View style={styles.summaryItem}>
-                <Ionicons name='arrow-up' size={18} color='green' />
+                <Ionicons
+                  name='arrow-up'
+                  size={18}
+                  color='green'
+                  style={{
+                    padding: 4,
+                    borderRadius: 8,
+                    backgroundColor: 'white',
+                  }}
+                />
                 <View style={{ flex: 1, paddingLeft: 8 }}>
                   <Text style={styles.summaryLabel}>Pemasukan</Text>
                   <Text style={styles.summaryAmount}>
@@ -363,29 +370,60 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    ...defaultStyles.shadow,
   },
   balanceCard: {
     backgroundColor: Colors.primary,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     marginBottom: 16,
+    ...defaultStyles.shadow,
+    // Modern gradient effect
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    // Add Islamic geometric pattern-inspired design
+    // (This is simulated with border styling)
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    // Using a background image would be ideal, but for now we'll use this styling
   },
-  balanceHeader: {
+  walletHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 16,
+    letterSpacing: 0.5,
+  },
+  accountNumberContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 10,
   },
-  balanceLabel: {
+  accountNumber: {
     color: '#FFF',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
+    letterSpacing: 1,
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 8,
+    padding: 12,
   },
   balanceAmount: {
     color: '#FFF',
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   quickActionContainer: {
     marginTop: 8,
@@ -408,13 +446,6 @@ const styles = StyleSheet.create({
   quickActionText: {
     color: '#FFF',
     fontSize: 12,
-  },
-  accountNumber: {
-    color: '#FFF',
-    fontSize: 12,
-    textAlign: 'right',
-    opacity: 0.8,
-    marginTop: 8,
   },
   summaryCard: {
     backgroundColor: Colors.primary,
