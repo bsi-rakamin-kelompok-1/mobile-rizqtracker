@@ -1,30 +1,9 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
-import { BlurView } from 'expo-blur';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 export default function TabsLayout() {
-  // Create a custom tab button that doesn't show ripple effects
-  const CustomTabButton = (props: any) => {
-    return (
-      <Pressable
-        {...props}
-        android_disableSound={true}
-        android_ripple={{color: 'transparent'}}
-        style={state => [
-          props.style,
-          {
-            opacity: 1, // Keep opacity constant to prevent fading
-            alignItems: 'center', // Center items horizontally
-            justifyContent: 'center', // Center items vertically
-            flex: 1,
-          }
-        ]}
-      />
-    );
-  };
-
   return (
     <Tabs
       screenOptions={{
@@ -44,7 +23,6 @@ export default function TabsLayout() {
           fontSize: 12,
           paddingTop: 6,
         },
-        tabBarButton: CustomTabButton, // Use our custom button for all tabs
       }}
     >
       <Tabs.Screen
@@ -55,6 +33,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name='home' size={28} color={color} />
           ),
+
         }}
       />
 
