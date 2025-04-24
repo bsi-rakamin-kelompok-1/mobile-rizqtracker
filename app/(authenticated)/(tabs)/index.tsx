@@ -1,11 +1,22 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
+import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner-native';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
+  const authStore = useAuthStore();
+
+  console.log('Auth state:', authStore);
   
   const handleLogout = () => {
+    authStore.logout();
+    toast.success('Logout berhasil', {
+      description: 'Anda telah berhasil keluar dari aplikasi.',
+      duration: 2000,
+    });
+
     router.replace('/login');
   };
 

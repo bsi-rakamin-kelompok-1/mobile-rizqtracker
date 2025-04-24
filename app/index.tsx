@@ -8,12 +8,16 @@ import Logo from '@/assets/images/Logo.svg';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
+import { useAuthStore } from '@/store/auth-store';
 
 SplashScreen.preventAutoHideAsync();
 
 const Page = () => {
   const router = useRouter();
-  
+  const state = useAuthStore();
+
+  console.log('Auth state:', state);
+
   const [fontsLoaded] = useFonts({
   });
 

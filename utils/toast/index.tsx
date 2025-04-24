@@ -9,7 +9,6 @@ export const useAdaptiveToast = () => {
   const isDark = colorScheme === 'dark';
   const iconColor = isDark ? 'white' : Colors.primary;
   const backgroundColor = isDark ? '#333' : 'white';
-  const errorBackgroundColor = isDark ? '#502626' : '#d9534f';
   
   const toast = {
     success: (title: string, options?: any) => {
@@ -21,9 +20,9 @@ export const useAdaptiveToast = () => {
     },
     error: (title: string, options?: any) => {
       return sonnerToast.error(title, {
-        style: { backgroundColor: errorBackgroundColor },
+        style: { backgroundColor },
         ...options,
-        icon: options?.icon || <Ionicons name="close-circle" size={24} color={iconColor} />,
+        icon: options?.icon || <Ionicons name="close-circle" size={24} color={Colors.error} />,
       });
     },
     info: (title: string, options?: any) => {

@@ -46,8 +46,8 @@ const Page = () => {
 
       // First press
       backPressedOnce = true;
-      toast.info('Exit App', {
-        description: 'Press back again to exit the app.',
+      toast.info('Keluar aplikasi', {
+        description: 'Tekan sekali lagi untuk keluar',
         duration: 2000,
       });
 
@@ -109,7 +109,7 @@ const Page = () => {
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.errors?.[0] ||
-        'Login failed. Please check your credentials.';
+        'Login gagal';
 
       // Show error toast
       toast.error('Login gagal', {

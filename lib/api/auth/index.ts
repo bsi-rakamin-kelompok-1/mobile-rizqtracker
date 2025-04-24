@@ -1,10 +1,5 @@
 import privateAxios from '@/lib/axios-private';
 
-interface BaseResponse {
-  success: boolean;
-  message: string;
-}
-
 interface RegisterPayload {
   email: string;
   password: string;
@@ -55,7 +50,15 @@ export const login = async (userData: LoginPayload): Promise<AuthAndUserDetailRe
   try {
     const { data: { token } } = await privateAxios.post<LoginResponse>('/v1/auth/login', userData);
 
-    const { data } = await privateAxios.get<AuthAndUserDetailResponse>('/v1/users/detail');
+    if (!token) {
+      throw new Error('Token not found');
+    }
+
+    const { data } = await privateAxios.get<AuthAndUserDetailResponse>('/v1/users/detail', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return {
       ...data,

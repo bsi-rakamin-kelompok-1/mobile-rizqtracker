@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { storage } from '@/lib/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login as apiLogin } from '@/lib/api/auth';
 
 // Define user type
@@ -18,46 +18,46 @@ interface User {
 
 // Define auth state
 interface AuthState {
-  token: string | null;
-  user: User | null;
   isLoading: boolean;
   error: string | null;
+  token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
 
   // Actions
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>;
 }
 
 // Create auth store
 export const useAuthStore = create<AuthState>((set, get) => ({
-  token: storage.getString('auth_token') || null,
-  user: storage.getString('user_data') ? JSON.parse(storage.getString('user_data')!) : null,
+  token: null,
+  user: null,
   isLoading: false,
   error: null,
-  isAuthenticated: !!storage.getString('auth_token'),
+  isAuthenticated: false,
 
   // Initialize auth state from storage
-  initializeAuth: () => {
-    const token = storage.getString('auth_token');
-    const userDataString = storage.getString('user_data');
+  initializeAuth: async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const userDataString = await AsyncStorage.getItem('user_data');
 
-    if (token && userDataString) {
-      try {
+      if (token && userDataString) {
         const userData = JSON.parse(userDataString);
         set({
           token,
           user: userData,
           isAuthenticated: true
         });
-      } catch (error) {
-        // If parsing fails, clear storage
-        storage.delete('auth_token');
-        storage.delete('user_data');
+      } else {
         set({ token: null, user: null, isAuthenticated: false });
       }
-    } else {
+    } catch (error) {
+      // If parsing fails, clear storage
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('user_data');
       set({ token: null, user: null, isAuthenticated: false });
     }
   },
@@ -74,8 +74,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // Store token and user data
-      storage.set('auth_token', token);
-      storage.set('user_data', JSON.stringify(user));
+      await AsyncStorage.setItem('auth_token', token);
+      await AsyncStorage.setItem('user_data', JSON.stringify(user));
 
       set({
         token,
@@ -96,10 +96,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   // Logout
-  logout: () => {
+  logout: async () => {
     // Clear storage
-    storage.delete('auth_token');
-    storage.delete('user_data');
+    await AsyncStorage.removeItem('auth_token');
+    await AsyncStorage.removeItem('user_data');
 
     // Reset state
     set({
