@@ -26,7 +26,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
 }
 
@@ -97,16 +97,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // Logout
   logout: async () => {
-    // Clear storage
-    await AsyncStorage.removeItem('auth_token');
-    await AsyncStorage.removeItem('user_data');
+    set({ isLoading: true, error: null });
 
-    // Reset state
-    set({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      error: null
-    });
+    try {
+      // Clear storage
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('user_data');
+
+      // Reset state
+      set({
+        token: null,
+        user: null,
+        isLoading: false,
+        error: null,
+        isAuthenticated: false,
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Still reset the state even if storage clear fails
+      set({
+        token: null,
+        user: null,
+        isLoading: false,
+        error: 'Logout error',
+        isAuthenticated: false,
+      });
+    }
   }
 }));

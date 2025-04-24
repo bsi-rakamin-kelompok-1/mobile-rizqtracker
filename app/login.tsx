@@ -22,13 +22,10 @@ const Page = () => {
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
   const router = useRouter();
   const toast = useAdaptiveToast();
+  const authStore = useAuthStore();
 
-  // Use auth store
-  const { login, isLoading } = useAuthStore();
-
-  // Local state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('rihlan1@gmail.com');
+  const [password, setPassword] = useState('Validpassword123#');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -85,6 +82,11 @@ const Page = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  useEffect(() => {
+    console.log('authStoreLoginPage: ', authStore);
+
+  }, [authStore]);
+
   const handleLogin = async () => {
     if (!validateInputs()) {
       return;
@@ -92,7 +94,7 @@ const Page = () => {
 
     try {
       // Use the login action from auth store
-      const user = await login(email, password);
+      const user = await authStore.login(email, password);
 
       // Show success toast
       toast.success('Login berhasil!', {
@@ -180,9 +182,9 @@ const Page = () => {
             <Button
               style={styles.loginButton}
               onPress={handleLogin}
-              disabled={isLoading}
+              disabled={authStore.isLoading}
             >
-              {isLoading ? (
+              {authStore.isLoading ? (
                 <ActivityIndicator color='white' />
               ) : (
                 <Text style={styles.loginButtonText}>Masuk</Text>

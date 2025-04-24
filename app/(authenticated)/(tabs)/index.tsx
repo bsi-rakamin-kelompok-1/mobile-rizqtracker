@@ -8,10 +8,8 @@ export default function AuthenticatedHome() {
   const router = useRouter();
   const authStore = useAuthStore();
 
-  console.log('Auth state:', authStore);
-
-  const handleLogout = () => {
-    authStore.logout();
+  const handleLogout = async () => {
+    await authStore.logout();
     toast.success('Logout berhasil', {
       description: 'Anda telah berhasil keluar dari aplikasi.',
       duration: 2000,

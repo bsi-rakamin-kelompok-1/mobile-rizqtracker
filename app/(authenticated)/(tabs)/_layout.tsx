@@ -18,9 +18,8 @@ export default function TabsLayout() {
         }}
       />
       
-      {/* You can add more tabs here as needed */}
       <Tabs.Screen
-        name="profile"
+        name="profile"  
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
