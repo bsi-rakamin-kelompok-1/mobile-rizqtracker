@@ -112,6 +112,9 @@ const Page = () => {
         error.response?.data?.errors?.[0] ||
         'Login gagal';
 
+      console.log('Login error: ', error);
+      
+
       // Show error toast
       toast.error('Login gagal', {
         description: errorMessage,
