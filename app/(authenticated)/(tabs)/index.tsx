@@ -18,6 +18,7 @@ import { toast } from 'sonner-native';
 import { DonutChart } from '@/components/DonutChart';
 import { defaultStyles } from '@/constants/Styles';
 import { CategoryItem } from '@/components/CategoryItem';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function AuthenticatedHome() {
   const [showBalance, setShowBalance] = useState(false);
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [activeTab, setActiveTab] = useState('pemasukan');
+  const [activePeriod, setActivePeriod] = useState('minggu'); // Add this new state
 
   // Mock data - replace with actual API calls/state management
   const userData = {
@@ -274,6 +276,60 @@ export default function AuthenticatedHome() {
               </TouchableOpacity>
             </View>
 
+            {/* Period tabs */}
+            <View style={styles.periodTabContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.periodTab,
+                  activePeriod === 'minggu' && styles.activePeriodTab,
+                ]}
+                onPress={() => setActivePeriod('minggu')}
+              >
+                <Text
+                  style={[
+                    styles.periodTabText,
+                    activePeriod === 'minggu' && styles.activePeriodTabText,
+                  ]}
+                >
+                  Minggu ini
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.periodTab,
+                  activePeriod === 'bulan' && styles.activePeriodTab,
+                ]}
+                onPress={() => setActivePeriod('bulan')}
+              >
+                <Text
+                  style={[
+                    styles.periodTabText,
+                    activePeriod === 'bulan' && styles.activePeriodTabText,
+                  ]}
+                >
+                  Bulan ini
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.periodTab,
+                  activePeriod === '3bulan' && styles.activePeriodTab,
+                ]}
+                onPress={() => setActivePeriod('3bulan')}
+              >
+                <Text
+                  style={[
+                    styles.periodTabText,
+                    activePeriod === '3bulan' && styles.activePeriodTabText,
+                  ]}
+                >
+                  Tiga bulan
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Tab Content */}
             {activeTab === 'pemasukan' ? (
               <View style={styles.tabContent}>
@@ -448,8 +504,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     flexDirection: 'row',
-    ...defaultStyles.shadow
-
+    ...defaultStyles.shadow,
   },
   chartContainer: {
     flex: 1,
@@ -541,6 +596,33 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     marginBottom: 16,
+  },
+  periodTabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    width: '100%', 
+  },
+  periodTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    backgroundColor: Colors.lightGray,
+    // marginRight: 8,
+  },
+  activePeriodTab: {
+    backgroundColor: Colors.primary,
+  },
+  periodTabText: {
+    fontSize: 12,
+    color: Colors.dark,
+    fontWeight: '500',
+  },
+  activePeriodTabText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   categoryItem: {
     flexDirection: 'row',
