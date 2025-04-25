@@ -17,6 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 import { DonutChart } from '@/components/DonutChart';
 import { defaultStyles } from '@/constants/Styles';
+import { CategoryItem } from '@/components/CategoryItem';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
@@ -251,7 +252,7 @@ export default function AuthenticatedHome() {
                     activeTab === 'pemasukan' && styles.activeTabText,
                   ]}
                 >
-                  Pemasukan 
+                  Pemasukan
                 </Text>
               </TouchableOpacity>
 
@@ -277,23 +278,25 @@ export default function AuthenticatedHome() {
             {activeTab === 'pemasukan' ? (
               <View style={styles.tabContent}>
                 {incomeCategories.map((item, index) => (
-                  <View key={index} style={styles.categoryItem}>
-                    <Text style={styles.categoryName}>{item.name}</Text>
-                    <Text style={styles.categoryAmount}>
-                      + {formatCurrency(item.amount)}
-                    </Text>
-                  </View>
+                  <CategoryItem
+                    key={index}
+                    name={item.name}
+                    amount={item.amount}
+                    type='income'
+                    formatCurrency={formatCurrency}
+                  />
                 ))}
               </View>
             ) : (
               <View style={styles.tabContent}>
                 {expenseCategories.map((item, index) => (
-                  <View key={index} style={styles.categoryItem}>
-                    <Text style={styles.categoryName}>{item.name}</Text>
-                    <Text style={[styles.categoryAmount, styles.expenseAmount]}>
-                      - {formatCurrency(item.amount)}
-                    </Text>
-                  </View>
+                  <CategoryItem
+                    key={index}
+                    name={item.name}
+                    amount={item.amount}
+                    type='expense'
+                    formatCurrency={formatCurrency}
+                  />
                 ))}
               </View>
             )}
@@ -379,11 +382,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 8,
     ...defaultStyles.shadow,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -392,7 +390,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     letterSpacing: 0.5,
-  },  
+  },
   accountNumberContainer: {
     flexDirection: 'row',
     gap: 6,
@@ -450,6 +448,8 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     flexDirection: 'row',
+    ...defaultStyles.shadow
+
   },
   chartContainer: {
     flex: 1,
@@ -515,6 +515,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
+    ...defaultStyles.shadow,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -592,8 +593,8 @@ const styles = StyleSheet.create({
   },
   splitBillTag: {
     fontSize: 12,
-    color: Colors.primary,
-    backgroundColor: 'rgba(0,184,148,0.1)',
+    color: 'white',
+    backgroundColor: Colors.tertiaryMuted,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
