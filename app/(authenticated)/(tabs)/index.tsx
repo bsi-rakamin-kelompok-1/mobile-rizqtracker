@@ -30,7 +30,7 @@ export default function AuthenticatedHome() {
     name: 'User123',
     avatarUrl: 'https://placekitten.com/100/100', // placeholder avatar
     balance: 5000000.0,
-    accountNumber: '1982728729120003',
+    accountNumber: '700000039',
     totalIncome: 5000000.0,
     totalExpense: 3000000.0,
     selisih: 2000000.0,
@@ -81,8 +81,8 @@ export default function AuthenticatedHome() {
   ];
 
   const incomeCategories = [
-    { name: 'Top Up', amount: 5000000.0 },
-    { name: 'Transfer', amount: 4000000.0 },
+    { name: 'Total Top Up', amount: 5000000.0 },
+    { name: 'Total Transfer', amount: 4000000.0 },
   ];
 
   const expenseCategories = [
@@ -377,34 +377,31 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    gap: 8,
     ...defaultStyles.shadow,
-    // Modern gradient effect
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
-    // Add Islamic geometric pattern-inspired design
-    // (This is simulated with border styling)
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    // Using a background image would be ideal, but for now we'll use this styling
   },
   walletHeader: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 16,
     letterSpacing: 0.5,
-  },
+  },  
   accountNumberContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 6,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 6,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 8,
-    padding: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   accountNumber: {
     color: '#FFF',
@@ -500,7 +497,7 @@ const styles = StyleSheet.create({
   summaryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginVertical: 6,
   },
   summaryLabel: {
     color: '#FFF',
