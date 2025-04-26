@@ -7,6 +7,7 @@ export default {
   tertiary: '#cca3ff',
   tertiaryMuted: '	#dabcff',
   tertiaryDark: '#bf8bff',
+  warning: '#FF9800',
   error: '#FF3D00',
   background: '#F5F5F5',
   dark: '#141518',
