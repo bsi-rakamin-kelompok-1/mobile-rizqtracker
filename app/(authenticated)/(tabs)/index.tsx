@@ -19,6 +19,136 @@ import { DonutChart } from '@/components/DonutChart';
 import { defaultStyles } from '@/constants/Styles';
 import { CategoryItem } from '@/components/CategoryItem';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BalanceCard from '@/components/BalanceCard';
+
+// Mock API responses - replace with actual API calls
+const mockIncomeResponse = {
+  success: true,
+  message: 'Cashflow income retrieved successfully',
+  period: {
+    start: '2025-04-01T00:00:00.776813719',
+    end: '2025-04-25T07:53:51.776813719',
+  },
+  income_details: {
+    topup_data: [
+      {
+        transaction_id: '3dde9eac-799a-49fd-9731-c2ede5ee63b6',
+        topup_method: 'debit_card',
+        amount: 20000,
+        notes: 'ini coba topup',
+        created_at: '2025-04-25T07:53:30.77247',
+      },
+    ],
+    transfer_data: [
+      {
+        transaction_id: '5e0cbe6a-5e20-4174-bff3-5e224cbefab2',
+        transaction_category: 'shopping',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:34.376673',
+      },
+      {
+        transaction_id: 'cd1d5890-0164-4920-93f8-524072d53334',
+        transaction_category: 'shopping',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:35.16444',
+      },
+      {
+        transaction_id: '8dabd638-0b0d-445f-88c9-49f37ccfb01b',
+        transaction_category: 'shopping',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:36.039426',
+      },
+      {
+        transaction_id: '85e921de-75fe-4cb6-84d2-4072c7beaa31',
+        transaction_category: 'needs',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:40.642391',
+      },
+      {
+        transaction_id: 'b1f60b50-4a92-4c79-930f-987d3b4cd321',
+        transaction_category: 'bills',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:43.875042',
+      },
+      {
+        transaction_id: '9c0f4f20-d736-4326-bfa4-bae9ee9c95af',
+        transaction_category: 'transport',
+        sender_full_name: 'Jane Doe',
+        sender_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-25T07:52:47.693108',
+      },
+    ],
+  },
+};
+
+const mockExpenseResponse = {
+  success: true,
+  message: 'Cashflow expense retrieved successfully',
+  period: {
+    start: '2025-04-14T00:00:00.97290467',
+    end: '2025-04-20T23:26:53.97290467',
+  },
+  expense_details: {
+    needs: [
+      {
+        transaction_id: '791c4f28-2ce6-46a4-b76b-e6ec0092b0b9',
+        recipient_full_name: 'John Doe',
+        recipient_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-20T23:23:41.88459',
+      },
+    ],
+    bills: [
+      {
+        transaction_id: '89060f8e-5b2e-4709-a47b-11e7d60d0e63',
+        recipient_full_name: 'John Doe',
+        recipient_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-20T23:23:46.577262',
+      },
+    ],
+    shopping: [
+      {
+        transaction_id: 'e7845501-7afd-455f-99ae-5404133dd66c',
+        recipient_full_name: 'John Doe',
+        recipient_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-20T23:23:54.355914',
+      },
+    ],
+    transport: [
+      {
+        transaction_id: 'd3c76d18-655e-40f1-b9c2-b3686a3c3499',
+        recipient_full_name: 'John Doe',
+        recipient_account_number: 700000000,
+        amount: 1000,
+        notes: 'ini notes coba',
+        created_at: '2025-04-20T23:23:50.382512',
+      },
+    ],
+    transfer_of_wealth: [],
+  },
+};
 
 export default function AuthenticatedHome() {
   const router = useRouter();
@@ -26,7 +156,9 @@ export default function AuthenticatedHome() {
   const [showBalance, setShowBalance] = useState(false);
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [activeTab, setActiveTab] = useState('pemasukan');
-  const [activePeriod, setActivePeriod] = useState('minggu'); // Add this new state
+  const [activePeriod, setActivePeriod] = useState('minggu');
+  const [incomeData, setIncomeData] = useState(mockIncomeResponse);
+  const [expenseData, setExpenseData] = useState(mockExpenseResponse);
 
   // Mock data - replace with actual API calls/state management
   const userData = {
@@ -39,62 +171,6 @@ export default function AuthenticatedHome() {
     selisih: 2000000.0,
     percentage: 70,
   };
-
-  const transactions = [
-    {
-      id: 1,
-      date: '20 April 2025',
-      type: 'topup',
-      description: 'Transfer dari Joe Shakira',
-      amount: 4000000.0,
-      splitBill: true,
-    },
-    {
-      id: 2,
-      date: '20 April 2025',
-      type: 'topup',
-      description: 'Transfer dari Joe Shakira',
-      amount: 4000000.0,
-      splitBill: true,
-    },
-    {
-      id: 3,
-      date: '20 April 2025',
-      type: 'topup',
-      description: 'Transfer dari Joe Shakira',
-      amount: 4000000.0,
-      splitBill: true,
-    },
-    {
-      id: 4,
-      date: '20 April 2025',
-      type: 'topup',
-      description: 'Transfer dari Joe Shakira',
-      amount: 4000000.0,
-      splitBill: true,
-    },
-    {
-      id: 5,
-      date: '20 April 2025',
-      type: 'topup',
-      description: 'Transfer dari Joe Shakira',
-      amount: 4000000.0,
-      splitBill: true,
-    },
-  ];
-
-  const incomeCategories = [
-    { name: 'Total Top Up', amount: 5000000.0 },
-    { name: 'Total Transfer', amount: 4000000.0 },
-  ];
-
-  const expenseCategories = [
-    { name: 'Kebutuhan', amount: 2000000.0 },
-    { name: 'Belanja', amount: 1000000.0 },
-    { name: 'Transportasi', amount: 500000.0 },
-    { name: 'Transfer Kekayaan', amount: 300000.0 },
-    { name: 'Tagihan', amount: 200000.0 },
-  ];
 
   const formatCurrency = (amount: number) => {
     return `Rp ${amount.toLocaleString('id-ID')}`;
@@ -113,6 +189,169 @@ export default function AuthenticatedHome() {
     toast.success('Nomor rekening disalin ke clipboard');
   };
 
+  // Calculate income categories from API response
+  const calculateIncomeCategories = () => {
+    if (!incomeData?.income_details) return [];
+
+    const { topup_data = [], transfer_data = [] } = incomeData.income_details;
+
+    const topupAmount = topup_data.reduce(
+      (total, item) => total + item.amount,
+      0
+    );
+
+    const transferAmount = transfer_data.reduce(
+      (total, item) => total + item.amount,
+      0
+    );
+
+    return [
+      { name: 'Total Top Up', amount: topupAmount, icon: 'arrow-up-circle' },
+      {
+        name: 'Total Transfer',
+        amount: transferAmount,
+        icon: 'swap-horizontal',
+      },
+    ];
+  };
+
+  // Calculate expense categories from API response
+  const calculateExpenseCategories = () => {
+    if (!expenseData?.expense_details) return [];
+
+    const {
+      needs = [],
+      shopping = [],
+      transport = [],
+      bills = [],
+      transfer_of_wealth = [],
+    } = expenseData.expense_details;
+
+    return [
+      {
+        name: 'Kebutuhan',
+        amount: needs.reduce((total, item) => total + item.amount, 0),
+        icon: 'basket',
+      },
+      {
+        name: 'Belanja',
+        amount: shopping.reduce((total, item) => total + item.amount, 0),
+        icon: 'cart',
+      },
+      {
+        name: 'Transportasi',
+        amount: transport.reduce((total, item) => total + item.amount, 0),
+        icon: 'car',
+      },
+      {
+        name: 'Transfer Kekayaan',
+        amount: transfer_of_wealth.reduce(
+          (total, item) => total + item.amount,
+          0
+        ),
+        icon: 'wallet',
+      },
+      {
+        name: 'Tagihan',
+        amount: bills.reduce((total, item) => total + item.amount, 0),
+        icon: 'receipt',
+      },
+    ].filter((item) => item.amount > 0); // Only show categories with transactions
+  };
+
+  // Handle period change
+  const handlePeriodChange = (period: any) => {
+    setActivePeriod(period);
+    // In a real app, you would fetch data for the selected period
+    // fetchIncomeData(period);
+    // fetchExpenseData(period);
+  };
+
+  // Get appropriate transaction list based on active tab
+  const getTransactions = () => {
+    if (activeTab === 'pemasukan') {
+      const topupTransactions =
+        incomeData?.income_details?.topup_data?.map((item) => ({
+          ...item,
+          type: 'topup',
+          description: `Topup via ${item.topup_method}`,
+          date: new Date(item.created_at).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        })) || [];
+
+      const transferTransactions =
+        incomeData?.income_details?.transfer_data?.map((item) => ({
+          ...item,
+          type: 'transfer',
+          description: `Transfer dari ${item.sender_full_name}`,
+          date: new Date(item.created_at).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        })) || [];
+
+      return [...topupTransactions, ...transferTransactions].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else {
+      // Handle expense transactions
+      const expenseDetails = expenseData?.expense_details || {};
+      let allExpenses = [] as any[];
+
+      Object.entries(expenseDetails).forEach(([category, transactions]) => {
+        if (Array.isArray(transactions)) {
+          const formattedTransactions = transactions.map((item) => ({
+            ...item,
+            type: category,
+            description: `Transfer ke ${item.recipient_full_name}`,
+            date: new Date(item.created_at).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+          }));
+          allExpenses = [...allExpenses, ...formattedTransactions];
+        }
+      });
+
+      return allExpenses.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+  };
+
+  // Get icon for transaction type
+  const getTransactionIcon = (type) => {
+    switch (type) {
+      case 'topup':
+        return 'arrow-up-circle';
+      case 'transfer':
+        return 'swap-horizontal';
+      case 'needs':
+        return 'basket';
+      case 'shopping':
+        return 'cart';
+      case 'transport':
+        return 'car';
+      case 'bills':
+        return 'receipt';
+      case 'transfer_of_wealth':
+        return 'wallet';
+      default:
+        return 'cash';
+    }
+  };
+
+  const incomeCategories = calculateIncomeCategories();
+  const expenseCategories = calculateExpenseCategories();
+  const transactions = getTransactions();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle='dark-content' backgroundColor={Colors.background} />
@@ -125,7 +364,7 @@ export default function AuthenticatedHome() {
                 Assalamu'alaikum, {userData.name}!
               </Text>
               <Text style={styles.subGreeting}>
-                Selamat datang di Rizqtracker
+                Berikut adalah catatan finansialmu.
               </Text>
             </View>
             <Image
@@ -135,155 +374,24 @@ export default function AuthenticatedHome() {
           </View>
 
           {/* Balance Card */}
-          <View style={styles.balanceCard}>
-            <Text style={styles.walletHeader}>Wallet utama</Text>
-            <View style={styles.accountNumberContainer}>
-              <Text style={styles.accountNumber}>{userData.accountNumber}</Text>
-              <TouchableOpacity onPress={copyToClipboard}>
-                <Ionicons name='copy-outline' size={20} color='#FFF' />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.balanceContainer}>
-              <Text style={styles.balanceAmount}>
-                {showBalance ? formatCurrency(userData.balance) : 'Rp ••••••••'}
-              </Text>
-              <TouchableOpacity onPress={toggleBalance}>
-                <Ionicons
-                  name={showBalance ? 'eye-outline' : 'eye-off-outline'}
-                  size={24}
-                  color='#FFF'
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <BalanceCard
+            balance={userData.balance}
+            accountNumber={userData.accountNumber}
+          />
 
-          {/* Financial Summary with Doughnut Chart */}
-          <View style={styles.summaryCard}>
-            <View style={styles.chartContainer}>
-              <View style={styles.chartWrapper}>
-                <DonutChart
-                  percentage={userData.percentage}
-                  color={'white'}
-                  size={100}
-                  strokeWidth={12}
-                />
-                <View style={styles.percentageContainer}>
-                  <Text style={styles.percentageText}>
-                    {userData.percentage}%
-                  </Text>
-                  <Text style={styles.percentageLabel}>Pengeluaran</Text>
-                </View>
-              </View>
-            </View>
+          {/* Cashflow Parent Card */}
+          <View style={styles.cashflowContainer}>
+            {/* 1. Title for the parent card */}
+            <Text style={styles.sectionTitle}>Ringkasan Finansial</Text>
 
-            <View style={styles.summaryData}>
-              <View style={styles.summaryItem}>
-                <Ionicons
-                  name='podium'
-                  size={18}
-                  color={Colors.secondary}
-                  style={{
-                    padding: 4,
-                    borderRadius: 8,
-                    backgroundColor: 'white',
-                  }}
-                />
-
-                <View style={{ flex: 1, paddingLeft: 8 }}>
-                  <Text style={styles.summaryLabel}>Selisih</Text>
-                  <Text style={styles.summaryAmount}>
-                    {formatCurrency(userData.selisih)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.summaryItem}>
-                <Ionicons
-                  name='arrow-down'
-                  size={18}
-                  color='red'
-                  style={{
-                    padding: 4,
-                    borderRadius: 8,
-                    backgroundColor: 'white',
-                  }}
-                />
-                <View style={{ flex: 1, paddingLeft: 8 }}>
-                  <Text style={styles.summaryLabel}>Pengeluaran</Text>
-                  <Text style={styles.summaryAmount}>
-                    {formatCurrency(userData.totalExpense)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.summaryItem}>
-                <Ionicons
-                  name='arrow-up'
-                  size={18}
-                  color='green'
-                  style={{
-                    padding: 4,
-                    borderRadius: 8,
-                    backgroundColor: 'white',
-                  }}
-                />
-                <View style={{ flex: 1, paddingLeft: 8 }}>
-                  <Text style={styles.summaryLabel}>Pemasukan</Text>
-                  <Text style={styles.summaryAmount}>
-                    {formatCurrency(userData.totalIncome)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Transactions Section */}
-          <View style={styles.transactionsCard}>
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.tab,
-                  activeTab === 'pemasukan' && styles.activeTab,
-                ]}
-                onPress={() => setActiveTab('pemasukan')}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === 'pemasukan' && styles.activeTabText,
-                  ]}
-                >
-                  Pemasukan
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.tab,
-                  activeTab === 'pengeluaran' && styles.activeTab,
-                ]}
-                onPress={() => setActiveTab('pengeluaran')}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === 'pengeluaran' && styles.activeTabText,
-                  ]}
-                >
-                  Pengeluaran
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Period tabs */}
+            {/* 2. Period tabs */}
             <View style={styles.periodTabContainer}>
               <TouchableOpacity
                 style={[
                   styles.periodTab,
                   activePeriod === 'minggu' && styles.activePeriodTab,
                 ]}
-                onPress={() => setActivePeriod('minggu')}
+                onPress={() => handlePeriodChange('minggu')}
               >
                 <Text
                   style={[
@@ -294,13 +402,13 @@ export default function AuthenticatedHome() {
                   Minggu ini
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.periodTab,
                   activePeriod === 'bulan' && styles.activePeriodTab,
                 ]}
-                onPress={() => setActivePeriod('bulan')}
+                onPress={() => handlePeriodChange('bulan')}
               >
                 <Text
                   style={[
@@ -311,13 +419,13 @@ export default function AuthenticatedHome() {
                   Bulan ini
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.periodTab,
                   activePeriod === '3bulan' && styles.activePeriodTab,
                 ]}
-                onPress={() => setActivePeriod('3bulan')}
+                onPress={() => handlePeriodChange('3bulan')}
               >
                 <Text
                   style={[
@@ -330,56 +438,217 @@ export default function AuthenticatedHome() {
               </TouchableOpacity>
             </View>
 
-            {/* Tab Content */}
-            {activeTab === 'pemasukan' ? (
-              <View style={styles.tabContent}>
-                {incomeCategories.map((item, index) => (
-                  <CategoryItem
-                    key={index}
-                    name={item.name}
-                    amount={item.amount}
-                    type='income'
-                    formatCurrency={formatCurrency}
+            {/* 3. Cashflow Summary with Donut Chart */}
+            <View style={styles.summaryCard}>
+              <View style={styles.chartContainer}>
+                <View style={styles.chartWrapper}>
+                  <DonutChart
+                    percentage={userData.percentage}
+                    color={'white'}
+                    size={100}
+                    strokeWidth={12}
                   />
-                ))}
-              </View>
-            ) : (
-              <View style={styles.tabContent}>
-                {expenseCategories.map((item, index) => (
-                  <CategoryItem
-                    key={index}
-                    name={item.name}
-                    amount={item.amount}
-                    type='expense'
-                    formatCurrency={formatCurrency}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Recent Transactions */}
-            <View style={styles.recentTransactionsContainer}>
-              {transactions.map((transaction) => (
-                <View key={transaction.id} style={styles.transactionItem}>
-                  <View style={styles.transactionDate}>
-                    <Text style={styles.dateText}>{transaction.date}</Text>
-                    <Text style={styles.transactionDescription}>
-                      {transaction.description}
+                  <View style={styles.percentageContainer}>
+                    <Text style={styles.percentageText}>
+                      {userData.percentage}%
                     </Text>
-                    <Text style={styles.transactionType}>
-                      {transaction.type}
-                    </Text>
+                    <Text style={styles.percentageLabel}>Pengeluaran</Text>
                   </View>
-                  <View style={styles.transactionDetails}>
-                    {transaction.splitBill && (
-                      <Text style={styles.splitBillTag}>Split Bill</Text>
-                    )}
-                    <Text style={styles.transactionAmount}>
-                      + {formatCurrency(transaction.amount)}
+                </View>
+              </View>
+
+              <View style={styles.summaryData}>
+                <View style={styles.summaryItem}>
+                  <Ionicons
+                    name='podium'
+                    size={18}
+                    color={Colors.secondary}
+                    style={{
+                      padding: 4,
+                      borderRadius: 8,
+                      backgroundColor: 'white',
+                    }}
+                  />
+
+                  <View style={{ flex: 1, paddingLeft: 8 }}>
+                    <Text style={styles.summaryLabel}>Selisih</Text>
+                    <Text style={styles.summaryAmount}>
+                      {formatCurrency(userData.selisih)}
                     </Text>
                   </View>
                 </View>
-              ))}
+
+                <View style={styles.summaryItem}>
+                  <Ionicons
+                    name='arrow-down'
+                    size={18}
+                    color='red'
+                    style={{
+                      padding: 4,
+                      borderRadius: 8,
+                      backgroundColor: 'white',
+                    }}
+                  />
+                  <View style={{ flex: 1, paddingLeft: 8 }}>
+                    <Text style={styles.summaryLabel}>Pengeluaran</Text>
+                    <Text style={styles.summaryAmount}>
+                      {formatCurrency(userData.totalExpense)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.summaryItem}>
+                  <Ionicons
+                    name='arrow-up'
+                    size={18}
+                    color='green'
+                    style={{
+                      padding: 4,
+                      borderRadius: 8,
+                      backgroundColor: 'white',
+                    }}
+                  />
+                  <View style={{ flex: 1, paddingLeft: 8 }}>
+                    <Text style={styles.summaryLabel}>Pemasukan</Text>
+                    <Text style={styles.summaryAmount}>
+                      {formatCurrency(userData.totalIncome)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* 4. Cashflow Transactions */}
+            <View style={styles.transactionsSection}>
+              {/* Tab Selection */}
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.tab,
+                    activeTab === 'pemasukan' && styles.activeTab,
+                  ]}
+                  onPress={() => setActiveTab('pemasukan')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === 'pemasukan' && styles.activeTabText,
+                    ]}
+                  >
+                    Pemasukan
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tab,
+                    activeTab === 'pengeluaran' && styles.activeTab,
+                  ]}
+                  onPress={() => setActiveTab('pengeluaran')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === 'pengeluaran' && styles.activeTabText,
+                    ]}
+                  >
+                    Pengeluaran
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Category Summary */}
+              <View style={styles.tabContent}>
+                {activeTab === 'pemasukan'
+                  ? incomeCategories.map((item, index) => (
+                      <View key={index} style={styles.categoryItem}>
+                        <View style={styles.categoryLeft}>
+                          <Ionicons
+                            name={item.icon}
+                            size={20}
+                            color={Colors.primary}
+                            style={styles.categoryIcon}
+                          />
+                          <Text style={styles.categoryName}>{item.name}</Text>
+                        </View>
+                        <Text style={styles.categoryAmount}>
+                          {formatCurrency(item.amount)}
+                        </Text>
+                      </View>
+                    ))
+                  : expenseCategories.map((item, index) => (
+                      <View key={index} style={styles.categoryItem}>
+                        <View style={styles.categoryLeft}>
+                          <Ionicons
+                            name={item.icon}
+                            size={20}
+                            color={Colors.error}
+                            style={styles.categoryIcon}
+                          />
+                          <Text style={styles.categoryName}>{item.name}</Text>
+                        </View>
+                        <Text
+                          style={[styles.categoryAmount, styles.expenseAmount]}
+                        >
+                          {formatCurrency(item.amount)}
+                        </Text>
+                      </View>
+                    ))}
+              </View>
+
+              {/* Recent Transactions */}
+              {transactions.length > 0 && (
+                <View>
+                  <Text style={styles.transactionTitle}>
+                    Transaksi Terakhir
+                  </Text>
+                  <View style={styles.recentTransactionsContainer}>
+                    {transactions.map((transaction) => (
+                      <View
+                        key={transaction.transaction_id}
+                        style={styles.transactionItem}
+                      >
+                        <View style={styles.transactionIconContainer}>
+                          <Ionicons
+                            name={getTransactionIcon(transaction.type)}
+                            size={20}
+                            color={
+                              activeTab === 'pemasukan'
+                                ? Colors.primary
+                                : Colors.error
+                            }
+                            style={styles.transactionIcon}
+                          />
+                        </View>
+                        <View style={styles.transactionDate}>
+                          <Text style={styles.dateText}>
+                            {transaction.date}
+                          </Text>
+                          <Text style={styles.transactionDescription}>
+                            {transaction.description}
+                          </Text>
+                          <Text style={styles.transactionNotes}>
+                            {transaction.notes}
+                          </Text>
+                        </View>
+                        <View style={styles.transactionDetails}>
+                          <Text
+                            style={[
+                              styles.transactionAmount,
+                              activeTab === 'pengeluaran'
+                                ? styles.expenseAmount
+                                : styles.incomeAmount,
+                            ]}
+                          >
+                            {activeTab === 'pengeluaran' ? '- ' : '+ '}
+                            {formatCurrency(transaction.amount)}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -387,9 +656,6 @@ export default function AuthenticatedHome() {
     </SafeAreaView>
   );
 }
-
-// For the DonutChart component, create it in components/DonutChart.tsx
-// Below is the style for the main component
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -431,73 +697,50 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     ...defaultStyles.shadow,
   },
-  balanceCard: {
-    backgroundColor: Colors.primary,
+  // Cashflow Parent Card
+  cashflowContainer: {
+    backgroundColor: '#FFF',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    gap: 8,
+    padding: 16,
+    marginBottom: 20,
     ...defaultStyles.shadow,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
-  walletHeader: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFF',
-    letterSpacing: 0.5,
+    color: Colors.dark,
+    marginBottom: 16,
   },
-  accountNumberContainer: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-    marginBottom: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  accountNumber: {
-    color: '#FFF',
-    fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 1,
-  },
-  balanceContainer: {
+  // Period tabs
+  periodTabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 8,
-    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 4,
   },
-  balanceAmount: {
-    color: '#FFF',
-    fontSize: 24,
+  periodTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginHorizontal: 2,
+  },
+  activePeriodTab: {
+    backgroundColor: Colors.primary,
+  },
+  periodTabText: {
+    fontSize: 12,
+    color: Colors.dark,
+    fontWeight: '500',
+  },
+  activePeriodTabText: {
+    color: 'white',
     fontWeight: 'bold',
   },
-  quickActionContainer: {
-    marginTop: 8,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  quickActionButton: {
-    alignItems: 'center',
-    minWidth: 60,
-  },
-  quickActionIcon: {
-    backgroundColor: '#FFF',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  quickActionText: {
-    color: '#FFF',
-    fontSize: 12,
-  },
+  // Cashflow Summary
   summaryCard: {
     backgroundColor: Colors.primary,
     borderRadius: 16,
@@ -510,20 +753,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  chartCategories: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 8,
-  },
-  categoryTag: {
-    color: '#FFF',
-    fontSize: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
   },
   chartWrapper: {
     alignItems: 'center',
@@ -565,12 +794,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  transactionsCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    ...defaultStyles.shadow,
+  // Transactions
+  transactionsSection: {
+    marginTop: 8,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -597,43 +823,29 @@ const styles = StyleSheet.create({
   tabContent: {
     marginBottom: 16,
   },
-  periodTabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    width: '100%', 
-  },
-  periodTab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    backgroundColor: Colors.lightGray,
-    // marginRight: 8,
-  },
-  activePeriodTab: {
-    backgroundColor: Colors.primary,
-  },
-  periodTabText: {
-    fontSize: 12,
-    color: Colors.dark,
-    fontWeight: '500',
-  },
-  activePeriodTabText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  // Category Item
   categoryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    alignItems: 'center',
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
+  },
+  categoryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryIcon: {
+    padding: 8,
+    marginRight: 12,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
   },
   categoryName: {
     color: Colors.dark,
     fontSize: 14,
+    fontWeight: '500',
   },
   categoryAmount: {
     color: 'green',
@@ -643,15 +855,35 @@ const styles = StyleSheet.create({
   expenseAmount: {
     color: 'red',
   },
+  incomeAmount: {
+    color: 'green',
+  },
+  // Transactions
+  transactionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.dark,
+    marginTop: 12,
+    marginBottom: 8,
+  },
   recentTransactionsContainer: {
-    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.lightGray,
   },
   transactionItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
+  },
+  transactionIconContainer: {
+    marginRight: 12,
+    justifyContent: 'center',
+  },
+  transactionIcon: {
+    padding: 8,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
   },
   transactionDate: {
     flex: 1,
@@ -666,25 +898,18 @@ const styles = StyleSheet.create({
     color: Colors.dark,
     marginBottom: 2,
   },
-  transactionType: {
+  transactionNotes: {
     fontSize: 12,
-    color: Colors.primary,
+    color: Colors.gray,
+    marginTop: 2,
   },
   transactionDetails: {
     alignItems: 'flex-end',
-  },
-  splitBillTag: {
-    fontSize: 12,
-    color: 'white',
-    backgroundColor: Colors.tertiaryMuted,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginBottom: 4,
+    justifyContent: 'center',
+    minWidth: 90,
   },
   transactionAmount: {
     fontSize: 14,
     fontWeight: '500',
-    color: 'green',
   },
 });
