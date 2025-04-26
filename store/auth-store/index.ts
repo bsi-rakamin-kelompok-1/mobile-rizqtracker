@@ -28,6 +28,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 // Create auth store
@@ -37,6 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
   isAuthenticated: false,
+  setIsLoading: (isLoading: boolean) => set({ isLoading }),
 
   // Initialize auth state from storage
   initializeAuth: async () => {

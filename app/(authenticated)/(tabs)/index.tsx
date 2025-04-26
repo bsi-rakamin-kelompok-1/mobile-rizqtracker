@@ -8,12 +8,12 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useAuthStore } from '@/store/auth-store';
-import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 import { DonutChart } from '@/components/DonutChart';
 import { defaultStyles } from '@/constants/Styles';
@@ -121,23 +121,21 @@ interface ExpenseDetails {
 export default function AuthenticatedHome() {
   const router = useRouter();
   const axios = useAxiosPrivate();
-  const { user, isLoading, isAuthenticated } = useAuthStore();
-  const [showBalance, setShowBalance] = useState(false);
-  const [showAccountNumber, setShowAccountNumber] = useState(false);
+  const authStore = useAuthStore();
   const [activeTab, setActiveTab] = useState('pemasukan');
   const [activePeriod, setActivePeriod] = useState('week');
+  const [refreshing, setRefreshing] = useState(false); // Add this line
 
   const [summaryData, setSummaryData] = useState<CashflowSummary | null>();
   const [incomeData, setIncomeData] = useState<IncomeDetails | null>();
   const [expenseData, setExpenseData] = useState<ExpenseDetails | null>();
-  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     fetchCashflowData(activePeriod);
   }, [activePeriod]);
 
   const fetchCashflowData = async (period: string) => {
-    setLoading(true);
+    authStore.setIsLoading(true);
     try {
       const [summaryResponse, incomeResponse, expenseResponse] =
         await Promise.all([
@@ -149,13 +147,30 @@ export default function AuthenticatedHome() {
       setSummaryData(summaryResponse.data);
       setIncomeData(incomeResponse.data);
       setExpenseData(expenseResponse.data);
+
+      return { success: true };
     } catch (error) {
       console.error('Error fetching cashflow data:', error);
       toast.error('Failed to load financial data');
+
+      return { success: false, error };
     } finally {
-      setLoading(false);
+      authStore.setIsLoading(false);
     }
   };
+
+  // Add this function
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+
+    fetchCashflowData(activePeriod)
+      .then(() => {
+        setRefreshing(false);
+      })
+      .catch(() => {
+        setRefreshing(false);
+      });
+  }, [activePeriod]);
 
   const handlePeriodChange = (period: string) => {
     setActivePeriod(period);
@@ -370,7 +385,7 @@ export default function AuthenticatedHome() {
   const totalExpense = getTotalExpense();
   const selisih = getSelisih();
 
-  if (!user && isLoading && !isAuthenticated) {
+  if (authStore.isLoading && !authStore.user && !authStore.isAuthenticated) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
@@ -378,20 +393,32 @@ export default function AuthenticatedHome() {
     );
   }
 
-  if (user && isAuthenticated)
+  if (authStore.user)
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar
           barStyle='dark-content'
           backgroundColor={Colors.background}
         />
-        <ScrollView style={styles.scrollView}>
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+              title='Menyegarkan data...'
+              titleColor={Colors.dark}
+            />
+          }
+        >
           <View style={styles.container}>
             {/* Header: Greeting and Avatar */}
             <View style={styles.header}>
               <View style={styles.greetingContainer}>
                 <Text style={styles.greeting}>
-                  Assalamu'alaikum, {user.full_name}!
+                  Assalamu'alaikum, {authStore.user.full_name}!
                 </Text>
                 <Text style={styles.subGreeting}>
                   Berikut adalah catatan finansialmu.
@@ -399,8 +426,8 @@ export default function AuthenticatedHome() {
               </View>
               <Image
                 source={
-                  user.avatar_url
-                    ? { uri: user.avatar_url }
+                  authStore.user.avatar_url
+                    ? { uri: authStore.user.avatar_url }
                     : require('@/assets/images/sagiri.jpeg')
                 }
                 style={styles.avatar}
@@ -409,8 +436,8 @@ export default function AuthenticatedHome() {
 
             {/* Balance Card */}
             <BalanceCard
-              balance={user.account.balance}
-              accountNumber={user.account.account_number}
+              balance={authStore.user.account.balance}
+              accountNumber={authStore.user.account.account_number}
             />
 
             {/* Cashflow Parent Card */}
