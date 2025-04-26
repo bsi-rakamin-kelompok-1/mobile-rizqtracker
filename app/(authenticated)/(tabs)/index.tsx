@@ -1,29 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { toast } from 'sonner-native';
+import { useNavigation, useRouter } from 'expo-router';
 import {
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-  RefreshControl,
 } from 'react-native';
-import { useNavigation, useRouter } from 'expo-router';
+
 import Colors from '@/constants/Colors';
+import Header from '@/components/home/Header';
 import { useAuthStore } from '@/store/auth-store';
-import { toast } from 'sonner-native';
+import BalanceCard from '@/components/BalanceCard';
 import useAxiosPrivate from '@/hooks/use-axios-private';
+import { formatPaymentMethod } from '@/utils/formatters';
+import CashflowContainer from '@/components/home/CashflowContainer';
 import {
   CashflowSummary,
-  IncomeDetails,
+  CategoryItem,
   ExpenseDetails,
   FormattedTransaction,
-  CategoryItem,
+  IncomeDetails,
 } from '@/types/cashflow';
-import { formatCurrency, formatPaymentMethod } from '@/utils/formatters';
-import Header from '@/components/home/Header';
-import BalanceCard from '@/components/BalanceCard';
-import CashflowContainer from '@/components/home/CashflowContainer';
 
 const HomeStatusBar = () => {
   useEffect(() => {
@@ -31,15 +33,17 @@ const HomeStatusBar = () => {
       StatusBar.setBackgroundColor(Colors.background);
       StatusBar.setBarStyle('light-content');
     };
-    
+
     setStatusBarColor();
-    
+
     const intervalId = setInterval(setStatusBarColor, 50);
-    
+
     return () => clearInterval(intervalId);
   }, []);
 
-  return <StatusBar backgroundColor={Colors.background} barStyle="light-content" />;
+  return (
+    <StatusBar backgroundColor={Colors.background} barStyle='light-content' />
+  );
 };
 
 export default function AuthenticatedHome() {
@@ -75,13 +79,11 @@ export default function AuthenticatedHome() {
     return unsubscribe;
   }, [navigation]);
 
-  // Reset StatusBar when tab changes
   useEffect(() => {
     StatusBar.setBackgroundColor(Colors.background);
     StatusBar.setBarStyle('light-content');
   }, [activeTab]);
 
-  // Safe setActiveTab function that preserves StatusBar color
   const handleTabChange = (tab: string) => {
     StatusBar.setBackgroundColor(Colors.background);
     StatusBar.setBarStyle('light-content');
