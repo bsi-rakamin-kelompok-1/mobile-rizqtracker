@@ -25,6 +25,23 @@ import Header from '@/components/home/Header';
 import BalanceCard from '@/components/BalanceCard';
 import CashflowContainer from '@/components/home/CashflowContainer';
 
+const HomeStatusBar = () => {
+  useEffect(() => {
+    const setStatusBarColor = () => {
+      StatusBar.setBackgroundColor(Colors.background);
+      StatusBar.setBarStyle('light-content');
+    };
+    
+    setStatusBarColor();
+    
+    const intervalId = setInterval(setStatusBarColor, 50);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return <StatusBar backgroundColor={Colors.background} barStyle="light-content" />;
+};
+
 export default function AuthenticatedHome() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -44,13 +61,32 @@ export default function AuthenticatedHome() {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      StatusBar.setBarStyle('light-content', true);
-      StatusBar.setBackgroundColor(Colors.background, true);
+      StatusBar.setBackgroundColor(Colors.background);
+      StatusBar.setBarStyle('light-content');
+
+      const timeoutId = setTimeout(() => {
+        StatusBar.setBackgroundColor(Colors.background);
+        StatusBar.setBarStyle('light-content');
+      }, 50);
+
+      return () => clearTimeout(timeoutId);
     });
 
     return unsubscribe;
   }, [navigation]);
-    
+
+  // Reset StatusBar when tab changes
+  useEffect(() => {
+    StatusBar.setBackgroundColor(Colors.background);
+    StatusBar.setBarStyle('light-content');
+  }, [activeTab]);
+
+  // Safe setActiveTab function that preserves StatusBar color
+  const handleTabChange = (tab: string) => {
+    StatusBar.setBackgroundColor(Colors.background);
+    StatusBar.setBarStyle('light-content');
+    setActiveTab(tab);
+  };
 
   const fetchCashflowData = async (period: string) => {
     authStore.setIsLoading(true);
@@ -311,7 +347,7 @@ export default function AuthenticatedHome() {
   if (authStore.user)
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar backgroundColor={Colors.background} />
+        <HomeStatusBar />
         <ScrollView
           style={styles.scrollView}
           refreshControl={
@@ -339,12 +375,12 @@ export default function AuthenticatedHome() {
               accountNumber={authStore.user.account.account_number}
             />
 
-            {/* Cashflow Container with all financial data */}
+            {/* Pass the safe tab change handler */}
             <CashflowContainer
               activePeriod={activePeriod}
               handlePeriodChange={handlePeriodChange}
               activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange} // Use this instead of directly passing setActiveTab
               percentage={percentage}
               totalIncome={totalIncome}
               totalExpense={totalExpense}

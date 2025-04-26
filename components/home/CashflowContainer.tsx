@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import PeriodTabs from './PeriodTabs';
@@ -36,15 +36,24 @@ const CashflowContainer = ({
   expenseCategories,
   transactions,
 }: CashflowContainerProps) => {
+  const handleTabChange = (tab: string) => {
+    // Make sure to preserve the status bar color
+    StatusBar.setBackgroundColor(Colors.background);
+    StatusBar.setBarStyle('light-content');
+
+    // Then call the original setter
+    setActiveTab(tab);
+  };
+
   return (
     <View style={styles.container}>
       {/* Title for the parent card */}
       <Text style={styles.sectionTitle}>Ringkasan Cashflow</Text>
 
       {/* Period tabs */}
-      <PeriodTabs 
-        activePeriod={activePeriod} 
-        handlePeriodChange={handlePeriodChange} 
+      <PeriodTabs
+        activePeriod={activePeriod}
+        handlePeriodChange={handlePeriodChange}
       />
 
       {/* Summary Chart */}
@@ -57,21 +66,23 @@ const CashflowContainer = ({
 
       {/* Cashflow Tabs */}
       <View>
-        <CashflowTabs 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
+        <CashflowTabs
+          activeTab={activeTab}
+          setActiveTab={handleTabChange} // Use the new handler
         />
 
         {/* Category List */}
         <CategoryList
-          categories={activeTab === 'pemasukan' ? incomeCategories : expenseCategories}
+          categories={
+            activeTab === 'pemasukan' ? incomeCategories : expenseCategories
+          }
           isExpense={activeTab === 'pengeluaran'}
         />
 
         {/* Transaction List */}
-        <TransactionList 
-          transactions={transactions} 
-          isExpense={activeTab === 'pengeluaran'} 
+        <TransactionList
+          transactions={transactions}
+          isExpense={activeTab === 'pengeluaran'}
         />
       </View>
     </View>
