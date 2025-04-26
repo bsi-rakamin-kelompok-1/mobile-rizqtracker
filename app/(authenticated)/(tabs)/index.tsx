@@ -17,11 +17,107 @@ import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 import { DonutChart } from '@/components/DonutChart';
 import { defaultStyles } from '@/constants/Styles';
-import { CategoryItem } from '@/components/CategoryItem';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BalanceCard from '@/components/BalanceCard';
+import useAxiosPrivate from '@/hooks/use-axios-private';
 
-// Mock API responses - replace with actual API calls
+// Define API response types
+interface PeriodRange {
+  start: string;
+  end: string;
+}
+
+interface CashflowSummary {
+  success: boolean;
+  message: string;
+  period: PeriodRange;
+  summary: {
+    income: {
+      total_topup: number;
+      total_transfer: number;
+    };
+    expense: {
+      total_needs: number;
+      total_bills: number;
+      total_shopping: number;
+      total_transport: number;
+      total_transfer_of_wealth: number;
+    };
+  };
+}
+
+interface IncomeDetails {
+  success: boolean;
+  message: string;
+  period: PeriodRange;
+  income_details: {
+    topup_data: Array<{
+      transaction_id: string;
+      topup_method: string;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+    transfer_data: Array<{
+      transaction_id: string;
+      transaction_category: string;
+      sender_full_name: string;
+      sender_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+  };
+}
+
+interface ExpenseDetails {
+  success: boolean;
+  message: string;
+  period: PeriodRange;
+  expense_details: {
+    needs: Array<{
+      transaction_id: string;
+      recipient_full_name: string;
+      recipient_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+    bills: Array<{
+      transaction_id: string;
+      recipient_full_name: string;
+      recipient_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+    shopping: Array<{
+      transaction_id: string;
+      recipient_full_name: string;
+      recipient_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+    transport: Array<{
+      transaction_id: string;
+      recipient_full_name: string;
+      recipient_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+    transfer_of_wealth: Array<{
+      transaction_id: string;
+      recipient_full_name: string;
+      recipient_account_number: number;
+      amount: number;
+      notes: string;
+      created_at: string;
+    }>;
+  };
+}
+
+// Mock API responses for initial rendering
 const mockIncomeResponse = {
   success: true,
   message: 'Cashflow income retrieved successfully',
@@ -58,42 +154,6 @@ const mockIncomeResponse = {
         notes: 'ini notes coba',
         created_at: '2025-04-25T07:52:35.16444',
       },
-      {
-        transaction_id: '8dabd638-0b0d-445f-88c9-49f37ccfb01b',
-        transaction_category: 'shopping',
-        sender_full_name: 'Jane Doe',
-        sender_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-25T07:52:36.039426',
-      },
-      {
-        transaction_id: '85e921de-75fe-4cb6-84d2-4072c7beaa31',
-        transaction_category: 'needs',
-        sender_full_name: 'Jane Doe',
-        sender_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-25T07:52:40.642391',
-      },
-      {
-        transaction_id: 'b1f60b50-4a92-4c79-930f-987d3b4cd321',
-        transaction_category: 'bills',
-        sender_full_name: 'Jane Doe',
-        sender_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-25T07:52:43.875042',
-      },
-      {
-        transaction_id: '9c0f4f20-d736-4326-bfa4-bae9ee9c95af',
-        transaction_category: 'transport',
-        sender_full_name: 'Jane Doe',
-        sender_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-25T07:52:47.693108',
-      },
     ],
   },
 };
@@ -126,152 +186,114 @@ const mockExpenseResponse = {
         created_at: '2025-04-20T23:23:46.577262',
       },
     ],
-    shopping: [
-      {
-        transaction_id: 'e7845501-7afd-455f-99ae-5404133dd66c',
-        recipient_full_name: 'John Doe',
-        recipient_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-20T23:23:54.355914',
-      },
-    ],
-    transport: [
-      {
-        transaction_id: 'd3c76d18-655e-40f1-b9c2-b3686a3c3499',
-        recipient_full_name: 'John Doe',
-        recipient_account_number: 700000000,
-        amount: 1000,
-        notes: 'ini notes coba',
-        created_at: '2025-04-20T23:23:50.382512',
-      },
-    ],
+    shopping: [],
+    transport: [],
     transfer_of_wealth: [],
   },
 };
 
+const mockSummaryResponse = {
+  success: true,
+  message: 'Cashflow summary retrieved successfully',
+  period: {
+    start: '2025-04-01T00:00:00.479356395',
+    end: '2025-04-20T23:27:54.479356395',
+  },
+  summary: {
+    income: {
+      total_topup: 60000,
+      total_transfer: 1000,
+    },
+    expense: {
+      total_needs: 0,
+      total_bills: 1000,
+      total_shopping: 1000,
+      total_transport: 1000,
+      total_transfer_of_wealth: 1000,
+    },
+  },
+};
+
+// Base URL for API calls
+
 export default function AuthenticatedHome() {
   const router = useRouter();
+  const axios = useAxiosPrivate();
   const authStore = useAuthStore();
   const [showBalance, setShowBalance] = useState(false);
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [activeTab, setActiveTab] = useState('pemasukan');
-  const [activePeriod, setActivePeriod] = useState('minggu');
-  const [incomeData, setIncomeData] = useState(mockIncomeResponse);
-  const [expenseData, setExpenseData] = useState(mockExpenseResponse);
+  const [activePeriod, setActivePeriod] = useState('week');
 
-  // Mock data - replace with actual API calls/state management
+  // API response data states
+  const [summaryData, setSummaryData] = useState<CashflowSummary | null>(
+    mockSummaryResponse as CashflowSummary
+  );
+  const [incomeData, setIncomeData] = useState<IncomeDetails | null>(
+    mockIncomeResponse as IncomeDetails
+  );
+  const [expenseData, setExpenseData] = useState<ExpenseDetails | null>(
+    mockExpenseResponse as ExpenseDetails
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Mock user data - replace with actual user data
   const userData = {
     name: 'User123',
-    avatarUrl: 'https://placekitten.com/100/100', // placeholder avatar
+    avatarUrl: 'https://i.pravatar.cc/300',
     balance: 5000000.0,
     accountNumber: '700000039',
-    totalIncome: 5000000.0,
-    totalExpense: 3000000.0,
-    selisih: 2000000.0,
-    percentage: 70,
+  };
+
+  // Fetch all data when period changes
+  useEffect(() => {
+    fetchCashflowData(activePeriod);
+  }, [activePeriod]);
+
+  // Fetch data based on period
+  const fetchCashflowData = async (period: string) => {
+    setLoading(true);
+    try {
+      // Fetch all three endpoints in parallel
+      const [summaryResponse, incomeResponse, expenseResponse] =
+        await Promise.all([
+          axios.get(`/v1/cashflow?period=${period}`),
+          axios.get(`/v1/cashflow/income?period=${period}`),
+          axios.get(`/v1/cashflow/expense?period=${period}`),
+        ]);
+
+      // Set state with response data
+      setSummaryData(summaryResponse.data);
+      setIncomeData(incomeResponse.data);
+      setExpenseData(expenseResponse.data);
+    } catch (error) {
+      console.error('Error fetching cashflow data:', error);
+      toast.error('Failed to load financial data');
+
+      // Use mock data as fallback
+      setSummaryData(mockSummaryResponse as CashflowSummary);
+      setIncomeData(mockIncomeResponse as IncomeDetails);
+      setExpenseData(mockExpenseResponse as ExpenseDetails);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
     return `Rp ${amount.toLocaleString('id-ID')}`;
   };
 
-  const toggleBalance = () => {
-    setShowBalance(!showBalance);
-  };
-
-  const toggleAccountNumber = () => {
-    setShowAccountNumber(!showAccountNumber);
-  };
-
-  const copyToClipboard = async () => {
-    await Clipboard.setStringAsync(userData.accountNumber);
-    toast.success('Nomor rekening disalin ke clipboard');
-  };
-
-  // Calculate income categories from API response
-  const calculateIncomeCategories = () => {
-    if (!incomeData?.income_details) return [];
-
-    const { topup_data = [], transfer_data = [] } = incomeData.income_details;
-
-    const topupAmount = topup_data.reduce(
-      (total, item) => total + item.amount,
-      0
-    );
-
-    const transferAmount = transfer_data.reduce(
-      (total, item) => total + item.amount,
-      0
-    );
-
-    return [
-      { name: 'Total Top Up', amount: topupAmount, icon: 'arrow-up-circle' },
-      {
-        name: 'Total Transfer',
-        amount: transferAmount,
-        icon: 'swap-horizontal',
-      },
-    ];
-  };
-
-  // Calculate expense categories from API response
-  const calculateExpenseCategories = () => {
-    if (!expenseData?.expense_details) return [];
-
-    const {
-      needs = [],
-      shopping = [],
-      transport = [],
-      bills = [],
-      transfer_of_wealth = [],
-    } = expenseData.expense_details;
-
-    return [
-      {
-        name: 'Kebutuhan',
-        amount: needs.reduce((total, item) => total + item.amount, 0),
-        icon: 'basket',
-      },
-      {
-        name: 'Belanja',
-        amount: shopping.reduce((total, item) => total + item.amount, 0),
-        icon: 'cart',
-      },
-      {
-        name: 'Transportasi',
-        amount: transport.reduce((total, item) => total + item.amount, 0),
-        icon: 'car',
-      },
-      {
-        name: 'Transfer Kekayaan',
-        amount: transfer_of_wealth.reduce(
-          (total, item) => total + item.amount,
-          0
-        ),
-        icon: 'wallet',
-      },
-      {
-        name: 'Tagihan',
-        amount: bills.reduce((total, item) => total + item.amount, 0),
-        icon: 'receipt',
-      },
-    ].filter((item) => item.amount > 0); // Only show categories with transactions
-  };
-
   // Handle period change
-  const handlePeriodChange = (period: any) => {
+  const handlePeriodChange = (period: string) => {
     setActivePeriod(period);
-    // In a real app, you would fetch data for the selected period
-    // fetchIncomeData(period);
-    // fetchExpenseData(period);
+    // API will be fetched by the useEffect
   };
 
   // Get appropriate transaction list based on active tab
   const getTransactions = () => {
-    if (activeTab === 'pemasukan') {
-      const topupTransactions =
-        incomeData?.income_details?.topup_data?.map((item) => ({
+    if (activeTab === 'pemasukan' && incomeData?.income_details) {
+      const topupTransactions = incomeData.income_details.topup_data.map(
+        (item) => ({
           ...item,
           type: 'topup',
           description: `Topup via ${item.topup_method}`,
@@ -280,10 +302,11 @@ export default function AuthenticatedHome() {
             month: 'long',
             day: 'numeric',
           }),
-        })) || [];
+        })
+      );
 
-      const transferTransactions =
-        incomeData?.income_details?.transfer_data?.map((item) => ({
+      const transferTransactions = incomeData.income_details.transfer_data.map(
+        (item) => ({
           ...item,
           type: 'transfer',
           description: `Transfer dari ${item.sender_full_name}`,
@@ -292,15 +315,16 @@ export default function AuthenticatedHome() {
             month: 'long',
             day: 'numeric',
           }),
-        })) || [];
+        })
+      );
 
       return [...topupTransactions, ...transferTransactions].sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-    } else {
+    } else if (expenseData?.expense_details) {
       // Handle expense transactions
-      const expenseDetails = expenseData?.expense_details || {};
+      const expenseDetails = expenseData.expense_details;
       let allExpenses = [] as any[];
 
       Object.entries(expenseDetails).forEach(([category, transactions]) => {
@@ -315,6 +339,7 @@ export default function AuthenticatedHome() {
               day: 'numeric',
             }),
           }));
+          
           allExpenses = [...allExpenses, ...formattedTransactions];
         }
       });
@@ -324,10 +349,12 @@ export default function AuthenticatedHome() {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     }
+
+    return [];
   };
 
   // Get icon for transaction type
-  const getTransactionIcon = (type) => {
+  const getTransactionIcon = (type: string): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case 'topup':
         return 'arrow-up-circle';
@@ -348,9 +375,129 @@ export default function AuthenticatedHome() {
     }
   };
 
-  const incomeCategories = calculateIncomeCategories();
-  const expenseCategories = calculateExpenseCategories();
+  // Calculate financial summary data
+  const getTotalIncome = () => {
+    if (!summaryData?.summary) return 0;
+    const { total_topup, total_transfer } = summaryData.summary.income;
+    return total_topup + total_transfer;
+  };
+
+  const getTotalExpense = () => {
+    if (!summaryData?.summary) return 0;
+    const {
+      total_needs,
+      total_bills,
+      total_shopping,
+      total_transport,
+      total_transfer_of_wealth,
+    } = summaryData.summary.expense;
+
+    return (
+      total_needs +
+      total_bills +
+      total_shopping +
+      total_transport +
+      total_transfer_of_wealth
+    );
+  };
+
+  const getPercentage = () => {
+    const totalIncome = getTotalIncome();
+    const totalExpense = getTotalExpense();
+    if (totalIncome === 0) return 0;
+    return Math.round((totalExpense / totalIncome) * 100);
+  };
+
+  const getSelisih = () => {
+    return getTotalIncome() - getTotalExpense();
+  };
+
+  const getIncomeCategories = () => {
+    if (!incomeData?.income_details) return [];
+
+    const { topup_data = [], transfer_data = [] } = incomeData.income_details;
+    const summary = summaryData?.summary?.income || {
+      total_topup: 0,
+      total_transfer: 0,
+    };
+
+    return [
+      {
+        name: 'Total Top Up',
+        amount: summary.total_topup,
+        count: topup_data.length,
+        icon: 'arrow-up-circle' as keyof typeof Ionicons.glyphMap,
+      },
+      {
+        name: 'Total Transfer',
+        amount: summary.total_transfer,
+        count: transfer_data.length,
+        icon: 'swap-horizontal' as keyof typeof Ionicons.glyphMap,
+      },
+    ];
+  };
+
+  // Prepare expense category data with counts
+  const getExpenseCategories = () => {
+    if (!expenseData?.expense_details) return [];
+
+    const {
+      needs = [],
+      shopping = [],
+      transport = [],
+      bills = [],
+      transfer_of_wealth = [],
+    } = expenseData.expense_details;
+
+    const summary = summaryData?.summary?.expense || {
+      total_needs: 0,
+      total_shopping: 0,
+      total_transport: 0,
+      total_bills: 0,
+      total_transfer_of_wealth: 0,
+    };
+
+    return [
+      {
+        name: 'Kebutuhan',
+        amount: summary.total_needs,
+        count: needs.length,
+        icon: 'basket' as keyof typeof Ionicons.glyphMap,
+      },
+      {
+        name: 'Belanja',
+        amount: summary.total_shopping,
+        count: shopping.length,
+        icon: 'cart' as keyof typeof Ionicons.glyphMap,
+      },
+      {
+        name: 'Transportasi',
+        amount: summary.total_transport,
+        count: transport.length,
+        icon: 'car' as keyof typeof Ionicons.glyphMap,
+      },
+      {
+        name: 'Transfer Kekayaan',
+        amount: summary.total_transfer_of_wealth,
+        count: transfer_of_wealth.length,
+        icon: 'wallet' as keyof typeof Ionicons.glyphMap,
+      },
+      {
+        name: 'Tagihan',
+        amount: summary.total_bills,
+        count: bills.length,
+        icon: 'receipt' as keyof typeof Ionicons.glyphMap,
+      },
+    ].filter((item) => item.amount > 0); // Only show categories with transactions
+  };
+
+  const incomeCategories = getIncomeCategories();
+  const expenseCategories = getExpenseCategories();
   const transactions = getTransactions();
+  const percentage = getPercentage();
+  const totalIncome = getTotalIncome();
+  const totalExpense = getTotalExpense();
+  const selisih = getSelisih();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -368,7 +515,11 @@ export default function AuthenticatedHome() {
               </Text>
             </View>
             <Image
-              source={require('@/assets/images/sagiri.jpeg')}
+              source={
+                userData.avatarUrl
+                  ? { uri: userData.avatarUrl }
+                  : require('@/assets/images/sagiri.jpeg')
+              }
               style={styles.avatar}
             />
           </View>
@@ -382,21 +533,21 @@ export default function AuthenticatedHome() {
           {/* Cashflow Parent Card */}
           <View style={styles.cashflowContainer}>
             {/* 1. Title for the parent card */}
-            <Text style={styles.sectionTitle}>Ringkasan Finansial</Text>
+            <Text style={styles.sectionTitle}>Ringkasan Cashflow</Text>
 
             {/* 2. Period tabs */}
             <View style={styles.periodTabContainer}>
               <TouchableOpacity
                 style={[
                   styles.periodTab,
-                  activePeriod === 'minggu' && styles.activePeriodTab,
+                  activePeriod === 'week' && styles.activePeriodTab,
                 ]}
-                onPress={() => handlePeriodChange('minggu')}
+                onPress={() => handlePeriodChange('week')}
               >
                 <Text
                   style={[
                     styles.periodTabText,
-                    activePeriod === 'minggu' && styles.activePeriodTabText,
+                    activePeriod === 'week' && styles.activePeriodTabText,
                   ]}
                 >
                   Minggu ini
@@ -406,14 +557,14 @@ export default function AuthenticatedHome() {
               <TouchableOpacity
                 style={[
                   styles.periodTab,
-                  activePeriod === 'bulan' && styles.activePeriodTab,
+                  activePeriod === 'month' && styles.activePeriodTab,
                 ]}
-                onPress={() => handlePeriodChange('bulan')}
+                onPress={() => handlePeriodChange('month')}
               >
                 <Text
                   style={[
                     styles.periodTabText,
-                    activePeriod === 'bulan' && styles.activePeriodTabText,
+                    activePeriod === 'month' && styles.activePeriodTabText,
                   ]}
                 >
                   Bulan ini
@@ -423,14 +574,15 @@ export default function AuthenticatedHome() {
               <TouchableOpacity
                 style={[
                   styles.periodTab,
-                  activePeriod === '3bulan' && styles.activePeriodTab,
+                  activePeriod === 'three_months' && styles.activePeriodTab,
                 ]}
-                onPress={() => handlePeriodChange('3bulan')}
+                onPress={() => handlePeriodChange('three_months')}
               >
                 <Text
                   style={[
                     styles.periodTabText,
-                    activePeriod === '3bulan' && styles.activePeriodTabText,
+                    activePeriod === 'three_months' &&
+                      styles.activePeriodTabText,
                   ]}
                 >
                   Tiga bulan
@@ -443,15 +595,13 @@ export default function AuthenticatedHome() {
               <View style={styles.chartContainer}>
                 <View style={styles.chartWrapper}>
                   <DonutChart
-                    percentage={userData.percentage}
+                    percentage={percentage}
                     color={'white'}
                     size={100}
                     strokeWidth={12}
                   />
                   <View style={styles.percentageContainer}>
-                    <Text style={styles.percentageText}>
-                      {userData.percentage}%
-                    </Text>
+                    <Text style={styles.percentageText}>{percentage}%</Text>
                     <Text style={styles.percentageLabel}>Pengeluaran</Text>
                   </View>
                 </View>
@@ -473,7 +623,7 @@ export default function AuthenticatedHome() {
                   <View style={{ flex: 1, paddingLeft: 8 }}>
                     <Text style={styles.summaryLabel}>Selisih</Text>
                     <Text style={styles.summaryAmount}>
-                      {formatCurrency(userData.selisih)}
+                      {formatCurrency(selisih)}
                     </Text>
                   </View>
                 </View>
@@ -492,7 +642,7 @@ export default function AuthenticatedHome() {
                   <View style={{ flex: 1, paddingLeft: 8 }}>
                     <Text style={styles.summaryLabel}>Pengeluaran</Text>
                     <Text style={styles.summaryAmount}>
-                      {formatCurrency(userData.totalExpense)}
+                      {formatCurrency(totalExpense)}
                     </Text>
                   </View>
                 </View>
@@ -511,7 +661,7 @@ export default function AuthenticatedHome() {
                   <View style={{ flex: 1, paddingLeft: 8 }}>
                     <Text style={styles.summaryLabel}>Pemasukan</Text>
                     <Text style={styles.summaryAmount}>
-                      {formatCurrency(userData.totalIncome)}
+                      {formatCurrency(totalIncome)}
                     </Text>
                   </View>
                 </View>
@@ -569,7 +719,12 @@ export default function AuthenticatedHome() {
                             color={Colors.primary}
                             style={styles.categoryIcon}
                           />
-                          <Text style={styles.categoryName}>{item.name}</Text>
+                          <View>
+                            <Text style={styles.categoryName}>{item.name}</Text>
+                            <Text style={styles.transactionCount}>
+                              {item.count} transaksi
+                            </Text>
+                          </View>
                         </View>
                         <Text style={styles.categoryAmount}>
                           {formatCurrency(item.amount)}
@@ -585,7 +740,12 @@ export default function AuthenticatedHome() {
                             color={Colors.error}
                             style={styles.categoryIcon}
                           />
-                          <Text style={styles.categoryName}>{item.name}</Text>
+                          <View>
+                            <Text style={styles.categoryName}>{item.name}</Text>
+                            <Text style={styles.transactionCount}>
+                              {item.count} transaksi
+                            </Text>
+                          </View>
                         </View>
                         <Text
                           style={[styles.categoryAmount, styles.expenseAmount]}
@@ -828,13 +988,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
   },
   categoryLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   categoryIcon: {
     padding: 8,
@@ -846,6 +1007,11 @@ const styles = StyleSheet.create({
     color: Colors.dark,
     fontSize: 14,
     fontWeight: '500',
+  },
+  transactionCount: {
+    fontSize: 12,
+    color: Colors.gray,
+    marginTop: 2,
   },
   categoryAmount: {
     color: 'green',
