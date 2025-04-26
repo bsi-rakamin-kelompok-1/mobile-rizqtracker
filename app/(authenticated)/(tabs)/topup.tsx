@@ -5,7 +5,6 @@ import Colors from '@/constants/Colors';
 const Topup = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={Colors.primary} barStyle='light-content' />
       <View style={styles.content}>
         <Text>Topup</Text>
       </View>

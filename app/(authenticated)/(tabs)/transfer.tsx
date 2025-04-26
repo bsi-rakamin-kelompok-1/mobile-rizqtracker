@@ -5,7 +5,6 @@ import Colors from '@/constants/Colors';
 const Transfer = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={Colors.primary} barStyle='light-content' />
       <View style={styles.content}>
         <Text>Transfer</Text>
       </View>

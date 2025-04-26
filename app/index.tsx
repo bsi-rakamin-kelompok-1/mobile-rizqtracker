@@ -16,8 +16,6 @@ const Page = () => {
   const router = useRouter();
   const state = useAuthStore();
 
-  console.log('Auth state:', state);
-
   const [fontsLoaded] = useFonts({});
 
   useEffect(() => {
@@ -43,9 +41,8 @@ const Page = () => {
   }
 
   return (
-    <Background>
-      <SafeAreaView style={{ flex: 1 }}>
-        <StatusBar style='light' backgroundColor={Colors.primary} />
+    <SafeAreaView style={{ flex: 1 }}>
+      <Background>
         <View style={styles.content}>
           <View style={styles.topContainer}>
             <Logo />
@@ -64,8 +61,8 @@ const Page = () => {
             </View>
           </View>
         </View>
-      </SafeAreaView>
-    </Background>
+      </Background>
+    </SafeAreaView>
   );
 };
 

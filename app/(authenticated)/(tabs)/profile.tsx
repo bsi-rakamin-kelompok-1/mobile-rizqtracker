@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,35 +8,21 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  StatusBar,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProfilePage = () => {
-  const router = useRouter();
-
-  useEffect(() => {
-    StatusBar.setBarStyle('light-content', true);
-    StatusBar.setBackgroundColor(Colors.primary, true);
-  }, []);
-
-  const handleGoBack = () => {
-    router.back();
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={Colors.primary} barStyle='light-content' />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <TouchableOpacity style={styles.backButton}>
             <Ionicons name='arrow-back' size={24} color='white' />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil</Text>

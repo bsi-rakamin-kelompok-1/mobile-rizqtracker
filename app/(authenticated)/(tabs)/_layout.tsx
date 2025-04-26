@@ -3,7 +3,6 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import Colors from '@/constants/Colors';
-import { defaultStyles } from '@/constants/Styles';
 
 export default function TabsLayout() {
   useEffect(() => {
@@ -18,7 +17,7 @@ export default function TabsLayout() {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary} barStyle='light-content' />
+      <StatusBar backgroundColor={Colors.background} barStyle='light-content' />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors.primary,
@@ -91,7 +90,8 @@ export default function TabsLayout() {
         <Tabs.Screen
           name='profile'
           options={{
-            title: 'Profile',
+            title: '',
+            headerShadowVisible: false,
             headerShown: false,
             tabBarIcon: ({ color }) => (
               <Ionicons name='person' size={28} color={color} />

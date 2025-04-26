@@ -36,18 +36,8 @@ const CashflowContainer = ({
   expenseCategories,
   transactions,
 }: CashflowContainerProps) => {
-  const handleTabChange = (tab: string) => {
-    // Make sure to preserve the status bar color
-    StatusBar.setBackgroundColor(Colors.background);
-    StatusBar.setBarStyle('light-content');
-
-    // Then call the original setter
-    setActiveTab(tab);
-  };
-
   return (
     <View style={styles.container}>
-      {/* Title for the parent card */}
       <Text style={styles.sectionTitle}>Ringkasan Cashflow</Text>
 
       {/* Period tabs */}
@@ -68,7 +58,7 @@ const CashflowContainer = ({
       <View>
         <CashflowTabs
           activeTab={activeTab}
-          setActiveTab={handleTabChange} // Use the new handler
+          setActiveTab={setActiveTab} // Use the new handler
         />
 
         {/* Category List */}
