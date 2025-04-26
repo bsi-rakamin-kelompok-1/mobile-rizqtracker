@@ -8,7 +8,7 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from 'sonner-native';
@@ -27,6 +27,7 @@ import CashflowContainer from '@/components/home/CashflowContainer';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
+  const navigation = useNavigation();
   const axios = useAxiosPrivate();
   const authStore = useAuthStore();
   const [activeTab, setActiveTab] = useState('pemasukan');
@@ -40,6 +41,16 @@ export default function AuthenticatedHome() {
   useEffect(() => {
     fetchCashflowData(activePeriod);
   }, [activePeriod]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      StatusBar.setBarStyle('light-content', true);
+      StatusBar.setBackgroundColor(Colors.background, true);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+    
 
   const fetchCashflowData = async (period: string) => {
     authStore.setIsLoading(true);
@@ -276,6 +287,10 @@ export default function AuthenticatedHome() {
     ];
   };
 
+  const handleAvatarPress = () => {
+    router.push('/(authenticated)/(tabs)/profile');
+  };
+
   // Prepare all the data for the UI
   const incomeCategories = getIncomeCategories();
   const expenseCategories = getExpenseCategories();
@@ -296,10 +311,7 @@ export default function AuthenticatedHome() {
   if (authStore.user)
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar
-          barStyle='dark-content'
-          backgroundColor={Colors.background}
-        />
+        <StatusBar backgroundColor={Colors.background} />
         <ScrollView
           style={styles.scrollView}
           refreshControl={
@@ -318,6 +330,7 @@ export default function AuthenticatedHome() {
             <Header
               userName={authStore.user.full_name}
               avatarUrl={authStore.user.avatar_url}
+              onAvatarPress={handleAvatarPress}
             />
 
             {/* Balance Card */}
@@ -345,8 +358,7 @@ export default function AuthenticatedHome() {
       </SafeAreaView>
     );
 
-  // If not authenticated, return null or redirect
-  return null;
+  return router.replace('./login');
 }
 
 const styles = StyleSheet.create({
@@ -356,6 +368,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,

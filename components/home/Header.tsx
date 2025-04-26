@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { defaultStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 
 interface HeaderProps {
   userName: string;
   avatarUrl: string | null;
+  onAvatarPress?: () => void; // Add this prop
 }
 
-const Header = ({ userName, avatarUrl }: HeaderProps) => {
+const Header = ({ userName, avatarUrl, onAvatarPress }: HeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.greetingContainer}>
@@ -17,14 +18,16 @@ const Header = ({ userName, avatarUrl }: HeaderProps) => {
           Berikut adalah catatan finansialmu.
         </Text>
       </View>
-      <Image
-        source={
-          avatarUrl
-            ? { uri: avatarUrl }
-            : require('@/assets/images/sagiri.jpeg')
-        }
-        style={styles.avatar}
-      />
+      <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
+        <Image
+          source={
+            avatarUrl
+              ? { uri: avatarUrl }
+              : require('@/assets/images/sagiri.jpeg')
+          }
+          style={styles.avatar}
+        />
+      </TouchableOpacity>
     </View>
   );
 };

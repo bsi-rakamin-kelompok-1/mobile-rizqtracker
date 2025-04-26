@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,22 +9,36 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProfilePage = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content', true);
+    StatusBar.setBackgroundColor(Colors.primary, true);
+  }, []);
+
+  const handleGoBack = () => {
+    router.back();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <StatusBar backgroundColor={Colors.primary} barStyle='light-content' />
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Ionicons name='arrow-back' size={24} color='white' />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil</Text>
           <View style={styles.headerRight} />
@@ -33,68 +47,66 @@ const ProfilePage = () => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Profile Image */}
           <View style={styles.imageContainer}>
-            <Image 
-              source={{ uri: 'https://i.pravatar.cc/300' }} 
-              style={styles.profileImage} 
+            <Image
+              source={{ uri: 'https://i.pravatar.cc/300' }}
+              style={styles.profileImage}
             />
             <TouchableOpacity style={styles.editImageButton}>
-              <Ionicons name="camera" size={20} color="white" />
+              <Ionicons name='camera' size={20} color='white' />
             </TouchableOpacity>
           </View>
-          
+
           {/* Form Fields */}
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Nama Lengkap</Text>
               <View style={styles.inputWrapper}>
                 <Input
-                  value="Alviona Retno Amalia"
+                  value='Alviona Retno Amalia'
                   editable={false}
                   style={styles.input}
                 />
               </View>
             </View>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email</Text>
               <View style={styles.inputWrapper}>
                 <Input
-                  value="viona@gmail.com"
+                  value='viona@gmail.com'
                   editable={false}
                   style={styles.input}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                  keyboardType='email-address'
+                  autoCapitalize='none'
                 />
               </View>
             </View>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>No HP</Text>
               <View style={styles.inputWrapper}>
                 <Input
-                  value="081234589"
+                  value='081234589'
                   editable={false}
                   style={styles.input}
-                  keyboardType="phone-pad"
+                  keyboardType='phone-pad'
                 />
               </View>
             </View>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>URL Avatar</Text>
               <View style={styles.inputWrapper}>
                 <Input
-                  value="https://fotoavatar"
+                  value='https://fotoavatar'
                   editable={false}
                   style={styles.input}
-                  autoCapitalize="none"
+                  autoCapitalize='none'
                 />
               </View>
             </View>
-            
-            <Button
-              style={styles.updateButton}
-            >
+
+            <Button style={styles.updateButton}>
               <Text style={styles.updateButtonText}>Perbaharui Profil</Text>
             </Button>
           </View>
