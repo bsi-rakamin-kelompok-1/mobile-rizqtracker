@@ -870,13 +870,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-
   tabContainer: {
     flexDirection: 'row',
     borderRadius: 8,
     backgroundColor: Colors.lightGray,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   tab: {
     flex: 1,
