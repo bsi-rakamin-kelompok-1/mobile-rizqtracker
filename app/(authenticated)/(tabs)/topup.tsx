@@ -6,17 +6,17 @@ import {
   SafeAreaView,
   TouchableOpacity,
   TextInput,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
-import { formatCurrency } from '@/utils/formatters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 // Payment method type
 type PaymentMethod = 'debit_card' | 'credit_card' | 'bank_transfer';
@@ -28,7 +28,10 @@ interface PaymentOption {
 }
 
 const Topup = () => {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isKeyboardVisible = useKeyboardVisibility();
+
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
@@ -98,119 +101,137 @@ const Topup = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
+    <>
+      <StatusBar barStyle='light-content' backgroundColor={Colors.primary} />
+      <SafeAreaView style={[styles.container]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View
+            style={[
+              styles.header,
+              {
+                paddingTop:
+                  Platform.OS === 'android'
+                    ? insets.top > 0
+                      ? insets.top
+                      : StatusBar.currentHeight
+                    : 0,
+              },
+            ]}
           >
-            <Ionicons name='arrow-back' size={24} color='white' />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Top Up</Text>
-          <View style={{ width: 24 }} />
-        </View>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons name='arrow-back' size={24} color='white' />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Top Up</Text>
+            <View style={{ width: 24 }} />
+          </View>
 
-        <ScrollView style={styles.content}>
-          <View style={styles.formContainer}>
-            {/* Amount Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Nominal Top Up</Text>
-              <View style={styles.amountInputContainer}>
-                <Text style={styles.currencySymbol}>Rp</Text>
+          <ScrollView
+            style={styles.content}
+            keyboardShouldPersistTaps='handled'
+          >
+            <View style={styles.formContainer}>
+              {/* Amount Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Nominal Top Up</Text>
+                <View style={styles.amountInputContainer}>
+                  <Text style={styles.currencySymbol}>Rp</Text>
+                  <TextInput
+                    style={styles.amountInput}
+                    value={amount}
+                    onChangeText={handleAmountChange}
+                    keyboardType='numeric'
+                    placeholder='0'
+                    placeholderTextColor='#AAAAAA'
+                  />
+                </View>
+              </View>
+
+              {/* Payment Method Dropdown */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Sumber Dana</Text>
+
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={toggleDropdown}
+                >
+                  {selectedOption ? (
+                    <View style={styles.selectedMethodContainer}>
+                      <View style={styles.iconContainer}>
+                        {selectedOption.icon}
+                      </View>
+                      <Text style={styles.selectedMethodText}>
+                        {selectedOption.label}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.placeholderText}>
+                      Pilih metode pembayaran
+                    </Text>
+                  )}
+                  <Ionicons
+                    name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={Colors.dark}
+                  />
+                </TouchableOpacity>
+
+                {isDropdownOpen && (
+                  <View style={styles.dropdownMenu}>
+                    {paymentOptions.map((option) => (
+                      <TouchableOpacity
+                        key={option.id}
+                        style={styles.dropdownItem}
+                        onPress={() => selectPaymentMethod(option.id)}
+                      >
+                        <View style={styles.iconContainer}>{option.icon}</View>
+                        <Text style={styles.dropdownItemText}>
+                          {option.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Notes Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Catatan</Text>
                 <TextInput
-                  style={styles.amountInput}
-                  value={amount}
-                  onChangeText={handleAmountChange}
-                  keyboardType='numeric'
-                  placeholder='0'
+                  style={styles.notesInput}
+                  value={notes}
+                  onChangeText={setNotes}
+                  placeholder='Masukkan catatan (opsional)'
                   placeholderTextColor='#AAAAAA'
+                  multiline
                 />
               </View>
             </View>
 
-            {/* Payment Method Dropdown */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Sumber Dana</Text>
-
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={toggleDropdown}
+            {!isKeyboardVisible && (
+              <View style={styles.buttonContainer}>
+              <Button
+                style={[
+                  styles.topupButton,
+                  !amount || !selectedMethod ? styles.disabledButton : {},
+                ]}
+                onPress={handleTopUp}
+                disabled={!amount || !selectedMethod}
               >
-                {selectedOption ? (
-                  <View style={styles.selectedMethodContainer}>
-                    <View style={styles.iconContainer}>
-                      {selectedOption.icon}
-                    </View>
-                    <Text style={styles.selectedMethodText}>
-                      {selectedOption.label}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.placeholderText}>
-                    Pilih metode pembayaran
-                  </Text>
-                )}
-                <Ionicons
-                  name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={Colors.dark}
-                />
-              </TouchableOpacity>
-
-              {isDropdownOpen && (
-                <View style={styles.dropdownMenu}>
-                  {paymentOptions.map((option) => (
-                    <TouchableOpacity
-                      key={option.id}
-                      style={styles.dropdownItem}
-                      onPress={() => selectPaymentMethod(option.id)}
-                    >
-                      <View style={styles.iconContainer}>{option.icon}</View>
-                      <Text style={styles.dropdownItemText}>
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+                <Text style={styles.topupButtonText}>Lanjut</Text>
+              </Button>
             </View>
+            )}
 
-            {/* Notes Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Catatan</Text>
-              <TextInput
-                style={styles.notesInput}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder='Masukkan catatan (opsional)'
-                placeholderTextColor='#AAAAAA'
-                multiline
-              />
-            </View>
-          </View>
-
-          <View style={styles.buttonContainer}>
-          <Button
-            style={[
-              styles.topupButton,
-              !amount || !selectedMethod ? styles.disabledButton : {},
-            ]}
-            onPress={handleTopUp}
-            disabled={!amount || !selectedMethod}
-          >
-            <Text style={styles.topupButtonText}>Lanjut</Text>
-          </Button>
-        </View>
-        </ScrollView>
-
-        
-       
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -219,7 +240,7 @@ export default Topup;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 72,
     backgroundColor: Colors.primary,
   },
   header: {

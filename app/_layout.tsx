@@ -100,6 +100,19 @@ const InitialLayout = () => {
           headerStyle: { backgroundColor: Colors.primary },
         }}
       />
+
+      <Stack.Screen
+        name='(authenticated)/(transaction)'
+        options={{
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerBackVisible: false,
+          headerShown: false,
+          headerStyle: { backgroundColor: Colors.primary },
+        }} 
+      />
+
     </Stack>
   );
 };

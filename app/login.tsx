@@ -24,7 +24,7 @@ const Page = () => {
   const toast = useAdaptiveToast();
   const authStore = useAuthStore();
 
-  const [email, setEmail] = useState('rihlan1@gmail.com');
+  const [email, setEmail] = useState('rihlan24@gmail.com');
   const [password, setPassword] = useState('Validpassword123#');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

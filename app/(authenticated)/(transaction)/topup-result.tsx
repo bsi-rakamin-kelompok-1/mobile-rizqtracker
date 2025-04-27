@@ -11,6 +11,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { format } from 'date-fns';
+import Logo from '@/assets/images/Logo.svg';
 import { formatCurrency, formatSnakeCase } from '@/utils/formatters';
 
 const TopUpResultPage = () => {
@@ -47,7 +48,7 @@ const TopUpResultPage = () => {
       <StatusBar style='light' />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Top Up</Text>
+        <Logo width={120} height={40} style={styles.logo} />
       </View>
 
       <View style={styles.content}>
@@ -91,10 +92,10 @@ const TopUpResultPage = () => {
               </View>
 
               {/* Receiver Name */}
-              <View style={styles.detailRow}>
+              {/* <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Nama Penerima</Text>
                 <Text style={styles.detailValue}>Akun Saya</Text>
-              </View>
+              </View> */}
 
               {/* Transaction Type */}
               <View style={styles.detailRow}>
@@ -144,18 +145,19 @@ export default TopUpResultPage;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 72,
     backgroundColor: Colors.primary,
   },
   header: {
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
+    paddingBottom: 30, // Add extra padding at the bottom
   },
-  headerTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+  logo: {
+    alignSelf: 'center', // Additional alignment to ensure centering
   },
   content: {
     flex: 1,
@@ -222,6 +224,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     padding: 24,
     backgroundColor: 'white',
+    paddingBottom: 72,
   },
   finishButton: {
     backgroundColor: Colors.primary,
