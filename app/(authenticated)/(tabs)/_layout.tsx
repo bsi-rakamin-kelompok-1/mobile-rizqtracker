@@ -3,8 +3,11 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import Colors from '@/constants/Colors';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 export default function TabsLayout() {
+  const isKeyboardVisible = useKeyboardVisibility();
+
   useEffect(() => {
     StatusBar.setBackgroundColor(Colors.primary);
     StatusBar.setBarStyle('light-content');
@@ -23,6 +26,7 @@ export default function TabsLayout() {
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.gray,
           tabBarStyle: {
+            display: isKeyboardVisible ? 'none' : 'flex',
             flexDirection: 'row',
             justifyContent: 'space-around',
             height: 100,
@@ -46,6 +50,7 @@ export default function TabsLayout() {
           options={{
             title: 'Home',
             headerShown: false,
+            tabBarActiveTintColor: Colors.primary,
             tabBarIcon: ({ color }) => (
               <Ionicons name='home' size={28} color={color} />
             ),
@@ -57,6 +62,7 @@ export default function TabsLayout() {
           options={{
             title: 'Transfer',
             headerShown: false,
+            tabBarActiveTintColor: Colors.primary,
             tabBarIcon: ({ color }) => (
               <Ionicons name='arrow-forward-circle' size={28} color={color} />
             ),
@@ -68,6 +74,7 @@ export default function TabsLayout() {
           options={{
             title: '',
             headerShown: false,
+            tabBarActiveTintColor: Colors.primary,
             tabBarIcon: ({ color }) => (
               <View style={styles.qrisIconContainer}>
                 <Ionicons name='qr-code' size={28} color='#FFF' />
@@ -81,6 +88,7 @@ export default function TabsLayout() {
           options={{
             title: 'Top Up',
             headerShown: false,
+            tabBarActiveTintColor: Colors.primary,
             tabBarIcon: ({ color }) => (
               <Ionicons name='add-circle' size={28} color={color} />
             ),
@@ -90,9 +98,10 @@ export default function TabsLayout() {
         <Tabs.Screen
           name='profile'
           options={{
-            title: '',
+            title: 'Profile',
             headerShadowVisible: false,
             headerShown: false,
+            tabBarActiveTintColor: Colors.primary,
             tabBarIcon: ({ color }) => (
               <Ionicons name='person' size={28} color={color} />
             ),
