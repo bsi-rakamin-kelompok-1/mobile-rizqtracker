@@ -7,7 +7,6 @@ import {
   Text,
   Platform,
   StatusBar as RNStatusBar,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -15,11 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/auth-store';
 import Colors from '@/constants/Colors';
 import { topupApi } from '@/lib/api/transaction/topup';
+import { transferApi } from '@/lib/api/transaction/transfer';
 import PinInput from '@/components/pin/PinInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdaptiveToast } from '@/utils/toast';
 
-const TopUpPinPage = () => {
+const TransactionPinPage = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -29,41 +29,77 @@ const TopUpPinPage = () => {
   const { token } = useAuthStore();
   const [shouldShake, setShouldShake] = useState(false);
 
-  // Extract params
+  // Extract common params
   const amount = params.amount ? Number(params.amount) : 0;
+  const notes = params.notes as string;
+
+  // Extract transaction type
+  const transactionType =
+    (params.transaction_type as 'topup' | 'transfer') || 'topup';
+
+  // Extract specific params based on transaction type
   const method = params.method as
     | 'debit_card'
     | 'credit_card'
     | 'bank_transfer';
-  const notes = params.notes as string;
+  const recipientAccount = params.recipient_account as string;
+  const category = params.category as string;
 
   const handlePinComplete = async (pin: string) => {
     try {
       setIsLoading(true);
-      setErrorMessage(null); // Clear any previous errors
-      setShouldShake(false); // Reset shake state
+      setErrorMessage(null);
+      setShouldShake(false);
 
-      const result = await topupApi(
-        {
-          topup_method: method,
-          amount: amount,
-          notes: notes || '',
-          pin: pin,
-        },
-        token!
-      );
+      let result;
 
-      // Navigate to success page on successful API call
+      if (transactionType === 'transfer') {
+        // Handle transfer transaction
+        result = await transferApi(
+          {
+            recipient_account_number: parseInt(recipientAccount),
+            transfer_category: category,
+            amount: amount,
+            pin: pin,
+            notes: notes || '',
+          },
+          token!
+        );
+      } else {
+        // Handle topup transaction
+        result = await topupApi(
+          {
+            topup_method: method,
+            amount: amount,
+            notes: notes || '',
+            pin: pin,
+          },
+          token!
+        );
+      }
+
+      // Common success navigation
       router.replace({
-        pathname: './topup-result',
+        pathname: '/(authenticated)/(transaction)/transaction-result',
         params: {
           status: 'success',
           transactionId: result.data.id,
           amount: result.data.amount.toString(),
-          method: result.data.topup_method,
+          transaction_type: transactionType,
+          method:
+            transactionType === 'transfer'
+              ? category
+              : 'topup_method' in result.data ? result.data.topup_method : undefined,
           referenceNumber: result.data.reference_number,
           createdAt: result.data.created_at,
           notes: result.data.notes || '',
+          recipient_account:
+            transactionType === 'transfer'
+              ? 'recipient_account_number' in result.data
+                ? result.data.recipient_account_number
+                : undefined
+              : undefined,
+          recipient_name: params.recipient_name,
         },
       });
     } catch (error: any) {
@@ -84,15 +120,16 @@ const TopUpPinPage = () => {
   };
 
   // Only call this when user explicitly cancels or max attempts reached
-  const handleFailure = () => {
-    router.replace({
-      pathname: './topup-result',
-      params: {
-        status: 'failed',
-        errorMessage: errorMessage || 'Transaksi dibatalkan',
-      },
-    });
-  };
+  // const handleFailure = () => {
+  //   router.replace({
+  //     pathname: './topup-result',
+  //     params: {
+  //       status: 'failed',
+  //       errorMessage: errorMessage || 'Transaksi dibatalkan',
+  //       transaction_type: transactionType,
+  //     },
+  //   });
+  // };
 
   return (
     <>
@@ -129,7 +166,8 @@ const TopUpPinPage = () => {
               isConfirmationMode={true}
               loading={isLoading}
               pinLength={6}
-              resetOnError={shouldShake} // Only pass true when shouldShake is true
+              // onCancel={() => handleFailure()}
+              resetOnError={shouldShake}
             />
           </View>
         </View>
@@ -196,4 +234,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TopUpPinPage;
+export default TransactionPinPage;

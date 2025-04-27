@@ -14,20 +14,26 @@ import { format } from 'date-fns';
 import Logo from '@/assets/images/Logo.svg';
 import { formatCurrency, formatSnakeCase } from '@/utils/formatters';
 
-const TopUpResultPage = () => {
+const TransactionResultPage = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   // Extract params
   const status = params.status as string;
   const amount = params.amount ? Number(params.amount) : 0;
+  const transactionType = (params.transaction_type as string) || 'topup';
   const method = params.method as string;
   const referenceNumber = params.referenceNumber as string;
   const createdAt = params.createdAt as string;
   const notes = params.notes as string;
   const errorMessage = params.errorMessage as string;
 
+  // Transfer specific params
+  const recipientAccount = params.recipient_account as string;
+  const recipientName = params.recipient_name as string;
+
   const isSuccess = status === 'success';
+  const isTransfer = transactionType === 'transfer';
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -91,21 +97,35 @@ const TopUpResultPage = () => {
                 <Text style={styles.detailValue}>{formatCurrency(amount)}</Text>
               </View>
 
-              {/* Receiver Name */}
-              {/* <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Nama Penerima</Text>
-                <Text style={styles.detailValue}>Akun Saya</Text>
-              </View> */}
-
               {/* Transaction Type */}
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Tipe Transaksi</Text>
-                <Text style={styles.detailValue}>Top Up</Text>
+                <Text style={styles.detailValue}>
+                  {isTransfer ? 'Transfer' : 'Top Up'}
+                </Text>
               </View>
 
-              {/* Top Up Method */}
+              {/* For Transfer: Recipient Name */}
+              {isTransfer && recipientName && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Nama Penerima</Text>
+                  <Text style={styles.detailValue}>{recipientName}</Text>
+                </View>
+              )}
+
+              {/* For Transfer: Recipient Account */}
+              {isTransfer && recipientAccount && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Nomor Rekening</Text>
+                  <Text style={styles.detailValue}>{recipientAccount}</Text>
+                </View>
+              )}
+
+              {/* Method (Top Up method or Transfer category) */}
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Metode Top Up</Text>
+                <Text style={styles.detailLabel}>
+                  {isTransfer ? 'Kategori' : 'Metode Top Up'}
+                </Text>
                 <Text style={styles.detailValue}>
                   {formatSnakeCase(method)}
                 </Text>
@@ -140,7 +160,7 @@ const TopUpResultPage = () => {
   );
 };
 
-export default TopUpResultPage;
+export default TransactionResultPage;
 
 const styles = StyleSheet.create({
   container: {
