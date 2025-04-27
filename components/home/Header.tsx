@@ -13,7 +13,7 @@ const Header = ({ userName, avatarUrl, onAvatarPress }: HeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.greetingContainer}>
-        <Text style={styles.greeting}>Assalamu'alaikum, {userName}!</Text>
+        <Text style={styles.greeting}>Assalamu'alaikum, {userName.split(" ")[0]}!</Text>
         <Text style={styles.subGreeting}>
           Berikut adalah catatan finansialmu.
         </Text>
@@ -23,7 +23,7 @@ const Header = ({ userName, avatarUrl, onAvatarPress }: HeaderProps) => {
           source={
             avatarUrl
               ? { uri: avatarUrl }
-              : require('@/assets/images/sagiri.jpeg')
+              : require('@/assets/images/cat-wink.png')
           }
           style={styles.avatar}
         />
