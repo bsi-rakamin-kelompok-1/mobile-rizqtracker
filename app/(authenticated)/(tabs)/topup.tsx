@@ -65,7 +65,7 @@ const Topup = () => {
 
     // Navigate to PIN verification page, passing the necessary data
     router.push({
-      pathname: '/(authenticated)/(transaction)/topup-pin',
+      pathname: '/(authenticated)/(transaction)/transaction-pin',
       params: {
         amount: amount.replace(/[^0-9]/g, ''),
         method: selectedMethod,
@@ -201,12 +201,12 @@ const Topup = () => {
 
               {/* Notes Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Catatan</Text>
+                <Text style={styles.label}>Catatan (opsional)</Text>
                 <TextInput
                   style={styles.notesInput}
                   value={notes}
                   onChangeText={setNotes}
-                  placeholder='Masukkan catatan (opsional)'
+                  placeholder='Masukkan catatan top up'
                   placeholderTextColor='#AAAAAA'
                   multiline
                 />
