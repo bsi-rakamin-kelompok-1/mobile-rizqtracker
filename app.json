@@ -41,6 +41,12 @@
             "./assets/fonts/SF-Pro.ttf"
           ]
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you update your profile picture."
+        }
       ]
     ],
     "experiments": {
