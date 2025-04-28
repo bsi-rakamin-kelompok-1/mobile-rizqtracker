@@ -29,6 +29,7 @@ interface AuthState {
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   setIsLoading: (isLoading: boolean) => void;
+  setUser: (user: User) => void;
 }
 
 // Create auth store
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   isAuthenticated: false,
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
+  setUser: (user: User) => set({ user }),
 
   // Initialize auth state from storage
   initializeAuth: async () => {
