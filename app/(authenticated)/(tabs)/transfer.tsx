@@ -500,7 +500,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gray,
     fontStyle: 'italic',
-    textAlign: 'center',
     marginTop: 10,
   },
   notesInput: {
