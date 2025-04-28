@@ -69,17 +69,35 @@ export default function AuthenticatedHome() {
     }
   };
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
 
-    fetchCashflowData(activePeriod)
-      .then(() => {
-        setRefreshing(false);
-      })
-      .catch(() => {
-        setRefreshing(false);
-      });
-  }, [activePeriod]);
+    try {
+      // First, fetch the cashflow data
+      const result = await fetchCashflowData(activePeriod);
+
+      // If successful, refresh user data to ensure balance is accurate
+      if (result.success && authStore.user) {
+        try {
+          // Get latest user details from API
+          const response = await axios.get('/v1/users/detail');
+
+          if (response.data.success) {
+            // Update the user in auth store
+            authStore.setUser(response.data.data);
+            console.log('User data refreshed to ensure accurate balance');
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error during refresh:', error);
+    } finally {
+      // Always stop the refreshing indicator
+      setRefreshing(false);
+    }
+  }, [activePeriod, authStore, axios]);
 
   const handlePeriodChange = (period: string) => {
     setActivePeriod(period);
