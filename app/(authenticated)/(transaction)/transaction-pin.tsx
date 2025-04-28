@@ -26,7 +26,7 @@ const TransactionPinPage = () => {
   const toast = useAdaptiveToast();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { token } = useAuthStore();
+  const { token, user, setUser } = useAuthStore(); // Add setUser to update user data
   const [shouldShake, setShouldShake] = useState(false);
 
   // Extract common params
@@ -65,6 +65,18 @@ const TransactionPinPage = () => {
           },
           token!
         );
+
+        // Update balance after successful transfer (decrease balance)
+        if (result?.data && user) {
+          const newBalance = user.account.balance - amount;
+          setUser({
+            ...user,
+            account: {
+              ...user.account,
+              balance: newBalance,
+            },
+          });
+        }
       } else {
         // Handle topup transaction
         result = await topupApi(
@@ -76,6 +88,18 @@ const TransactionPinPage = () => {
           },
           token!
         );
+
+        // Update balance after successful topup (increase balance)
+        if (result?.data && user) {
+          const newBalance = user.account.balance + amount;
+          setUser({
+            ...user,
+            account: {
+              ...user.account,
+              balance: newBalance,
+            },
+          });
+        }
       }
 
       // Common success navigation
@@ -89,7 +113,9 @@ const TransactionPinPage = () => {
           method:
             transactionType === 'transfer'
               ? category
-              : 'topup_method' in result.data ? result.data.topup_method : undefined,
+              : 'topup_method' in result.data
+              ? result.data.topup_method
+              : undefined,
           referenceNumber: result.data.reference_number,
           createdAt: result.data.created_at,
           notes: result.data.notes || '',
