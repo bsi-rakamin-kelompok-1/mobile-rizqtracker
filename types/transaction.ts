@@ -15,5 +15,5 @@ export const transferCategories: {
     { id: 'shopping', label: 'Belanja', icon: 'cart' },
     { id: 'transport', label: 'Transportasi', icon: 'car' },
     { id: 'bills', label: 'Tagihan', icon: 'receipt' },
-    { id: 'transfer_of_wealth', label: 'Lain-lain', icon: 'wallet' },
+    { id: 'transfer_of_wealth', label: 'Transfer Kekayaan', icon: 'wallet' },
   ];
