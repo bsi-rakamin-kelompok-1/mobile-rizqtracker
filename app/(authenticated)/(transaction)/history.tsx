@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/Colors';
+import Colors, { transactionColors } from '@/constants/Colors';
 import useAxiosPrivate from '@/hooks/use-axios-private';
 import { useAdaptiveToast } from '@/utils/toast';
 import {
@@ -26,6 +26,7 @@ import {
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Picker } from '@react-native-picker/picker';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 
 // Define transaction type
 interface Transaction {
@@ -52,19 +53,24 @@ interface PaginationMeta {
   has_previous: boolean;
 }
 
+interface TransactionResponse {
+  success: boolean;
+  message: string;
+  meta: PaginationMeta;
+  data: Transaction[];
+}
+
 const TransactionHistoryPage = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const axios = useAxiosPrivate();
   const toast = useAdaptiveToast();
+  const queryClient = useQueryClient();
+  const listRef = useRef<FlatList>(null);
 
   // State variables
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
-    page: 1,
     size: 20,
     sort_by: 'createdAt',
     sort_type: 'desc',
@@ -74,76 +80,56 @@ const TransactionHistoryPage = () => {
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [filters]);
+  // Define the query function
+  const fetchTransactions = async ({ pageParam = 1 }) => {
+    const queryParams = [
+      `page=${pageParam}`,
+      `size=${filters.size}`,
+      `sort_by=${filters.sort_by}`,
+      `sort_type=${filters.sort_type}`,
+      filters.transaction_type &&
+        `transaction_type=${filters.transaction_type}`,
+      filters.transfer_category &&
+        `transfer_category=${filters.transfer_category}`,
+      filters.topup_method && `topup_method=${filters.topup_method}`,
+      search && `search=${search}`,
+    ]
+      .filter(Boolean)
+      .join('&');
 
-  const fetchTransactions = async (resetPage = false) => {
-    setIsLoading(true);
-
-    try {
-      const params = {
-        page: resetPage ? 1 : filters.page,
-        size: filters.size,
-        sort_by: filters.sort_by,
-        sort_type: filters.sort_type,
-        search: search || undefined,
-        transaction_type: filters.transaction_type || undefined,
-        transfer_category: filters.transfer_category || undefined,
-        topup_method: filters.topup_method || undefined,
-      };
-
-      const queryString = Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('&');
-
-      const response = await axios.get(`/v1/transactions?${queryString}`);
-
-      if (response.data.success) {
-        if (resetPage || filters.page === 1) {
-          setTransactions(response.data.data);
-        } else {
-          setTransactions((prev) => [...prev, ...response.data.data]);
-        }
-        setMeta(response.data.meta);
-      } else {
-        throw new Error(
-          response.data.message || 'Failed to fetch transactions'
-        );
-      }
-    } catch (error: any) {
-      console.error('Error fetching transactions:', error?.response.data);
-      toast.error('Gagal memuat riwayat transaksi', {
-        description: 'Silakan coba lagi nanti',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    const response = await axios.get(`/v1/transactions?${queryParams}`);
+    return response.data;
   };
 
-  const handleLoadMore = () => {
-    if (meta?.has_next) {
-      setFilters((prev) => ({
-        ...prev,
-        page: prev.page + 1,
-      }));
-    }
-  };
+  // Use React Query's useInfiniteQuery hook
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['transactions', filters, search],
+    queryFn: fetchTransactions,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.has_next ? lastPage.meta.current_page + 1 : undefined,
+    refetchOnWindowFocus: false,
+  });
 
+  // Handle search
   const handleSearch = () => {
-    setFilters((prev) => ({
-      ...prev,
-      page: 1,
-    }));
-    fetchTransactions(true);
+    refetch();
   };
 
+  // Clear all filters
   const clearFilters = () => {
     setFilters({
-      page: 1,
       size: 20,
-      sort_by: 'createdAat',
+      sort_by: 'createdAt',
       sort_type: 'desc',
       transaction_type: '',
       transfer_category: '',
@@ -151,13 +137,20 @@ const TransactionHistoryPage = () => {
     });
     setSearch('');
     setIsFilterVisible(false);
+
+    // Invalidate and refetch data
+    queryClient.invalidateQueries({
+      queryKey: ['transactions'],
+    });
   };
 
+  // Apply filters
   const applyFilters = () => {
-    fetchTransactions(true);
     setIsFilterVisible(false);
+    refetch();
   };
 
+  // Helper methods for transaction display
   const getTransactionIcon = (transaction: Transaction): string => {
     if (transaction.transaction_type === 'topup') {
       return 'arrow-up-circle';
@@ -213,28 +206,38 @@ const TransactionHistoryPage = () => {
     }
   };
 
+  // Flatten the paginated data for FlatList
+  const transactions = data?.pages?.flatMap((page) => page.data) || [];
+
   const renderTransactionItem = ({ item }: { item: Transaction }) => {
     const isIncome = item.transaction_type === 'topup';
-
+    
+    // Determine which color set to use
+    let colorSet;
+    if (isIncome) {
+      colorSet = transactionColors.topup;
+    } else if (item.transfer_category) {
+      colorSet = transactionColors[item.transfer_category as keyof typeof transactionColors] || 
+                transactionColors.default;
+    } else {
+      colorSet = transactionColors.default;
+    }
+  
     return (
       <View style={styles.transactionItem}>
         <View
           style={[
             styles.iconContainer,
-            {
-              backgroundColor: isIncome
-                ? Colors.primaryMuted
-                : Colors.secondaryMuted
-            },
+            { backgroundColor: colorSet.background },
           ]}
         >
           <Ionicons
             name={getTransactionIcon(item) as any}
             size={18}
-            color={isIncome ? 'white' : 'white'}
+            color={colorSet.icon}
           />
         </View>
-
+  
         <View style={styles.transactionDetails}>
           <Text style={styles.transactionTitle}>
             {getTransactionTitle(item)}
@@ -247,7 +250,7 @@ const TransactionHistoryPage = () => {
           </Text>
           {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
         </View>
-
+  
         <View style={styles.amountContainer}>
           <Text
             style={[
@@ -264,7 +267,7 @@ const TransactionHistoryPage = () => {
   };
 
   const renderFooter = () => {
-    if (!isLoading) return null;
+    if (!isFetchingNextPage) return null;
     return (
       <View style={styles.loaderFooter}>
         <ActivityIndicator color={Colors.primary} />
@@ -273,7 +276,7 @@ const TransactionHistoryPage = () => {
   };
 
   const ListEmptyComponent = () => {
-    if (isLoading) return null;
+    if (status === 'pending') return null;
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name='document-text-outline' size={56} color={Colors.gray} />
@@ -342,8 +345,7 @@ const TransactionHistoryPage = () => {
                   onPress={() => {
                     setSearch('');
                     if (search !== '') {
-                      setFilters((prev) => ({ ...prev, page: 1 }));
-                      fetchTransactions(true);
+                      refetch();
                     }
                   }}
                 >
@@ -367,8 +369,8 @@ const TransactionHistoryPage = () => {
                       setFilters((prev) => ({ ...prev, sort_by, sort_type }));
                     }}
                   >
-                    <Picker.Item label='Terbaru' value='created_at-desc' />
-                    <Picker.Item label='Terlama' value='created_at-asc' />
+                    <Picker.Item label='Terbaru' value='createdAt-desc' />
+                    <Picker.Item label='Terlama' value='createdAt-asc' />
                     <Picker.Item label='Nominal Terbesar' value='amount-desc' />
                     <Picker.Item label='Nominal Terkecil' value='amount-asc' />
                   </Picker>
@@ -474,19 +476,42 @@ const TransactionHistoryPage = () => {
             </View>
           )}
 
-          {/* Transaction List */}
-          <FlatList
-            data={transactions}
-            renderItem={renderTransactionItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={renderFooter}
-            ListEmptyComponent={ListEmptyComponent}
-            refreshing={isLoading && filters.page === 1}
-            onRefresh={() => fetchTransactions(true)}
-          />
+          {/* Transaction List with Infinite Scrolling */}
+          {status === 'pending' ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size='large' color={Colors.primary} />
+            </View>
+          ) : status === 'error' ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Gagal memuat data. Silakan coba lagi.
+              </Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => refetch()}
+              >
+                <Text style={styles.retryText}>Coba Lagi</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              ref={listRef}
+              data={transactions}
+              renderItem={renderTransactionItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContainer}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
+              ListEmptyComponent={ListEmptyComponent}
+              refreshing={isFetching && !isFetchingNextPage}
+              onRefresh={() => refetch()}
+            />
+          )}
         </View>
       </SafeAreaView>
     </>
@@ -497,7 +522,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.primary,
-    paddingTop: 20,
+    paddingTop: 24,
   },
   header: {
     flexDirection: 'row',
@@ -522,6 +547,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    padding: 16,
+    backgroundColor: '#FFEBEE',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: Colors.error,
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  retryText: {
+    color: 'white',
+    fontWeight: '500',
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -574,7 +623,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   picker: {
-    height: 40,
     width: '100%',
   },
   filterButtonsContainer: {
@@ -618,7 +666,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
