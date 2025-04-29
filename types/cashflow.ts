@@ -76,6 +76,8 @@ export interface FormattedTransaction {
   amount: number;
   notes: string;
   created_at: string;
+  iconColor: string;
+  backgroundColor: string;
   [key: string]: any; // For additional properties
 }
 
@@ -84,4 +86,6 @@ export interface CategoryItem {
   amount: number;
   count: number;
   icon: string;
+  iconColor: string;
+  backgroundColor: string;
 }
