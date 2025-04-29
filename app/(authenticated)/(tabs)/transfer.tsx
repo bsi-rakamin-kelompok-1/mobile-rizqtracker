@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/Colors';
+import Colors, { transactionColors } from '@/constants/Colors'; // Import transactionColors
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
 import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
@@ -269,7 +269,13 @@ const Transfer = () => {
                     placeholderTextColor='#AAAAAA'
                   />
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 4, justifyContent: 'space-between' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginTop: 4,
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Text style={styles.helperText}>
                     Minimum transfer Rp10.000
                   </Text>
@@ -282,41 +288,57 @@ const Transfer = () => {
                 </View>
               </View>
 
-              {/* Transfer Category */}
+              {/* Transfer Category - Updated to use transactionColors */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Kategori Transfer</Text>
                 <View style={styles.categoriesContainer}>
-                  {transferCategories.map((category) => (
-                    <TouchableOpacity
-                      key={category.id}
-                      style={[
-                        styles.categoryItem,
-                        selectedCategory === category.id &&
-                          styles.selectedCategory,
-                      ]}
-                      onPress={() => setSelectedCategory(category.id)}
-                    >
-                      <Ionicons
-                        name={category.icon as any}
-                        size={20}
-                        color={
-                          selectedCategory === category.id
-                            ? 'white'
-                            : Colors.primary
-                        }
-                        style={styles.categoryIcon}
-                      />
-                      <Text
+                  {transferCategories.map((category) => {
+                    // Get the category color from transactionColors
+                    const colorSet =
+                      transactionColors[
+                        category.id as keyof typeof transactionColors
+                      ] || transactionColors.default;
+
+                    return (
+                      <TouchableOpacity
+                        key={category.id}
                         style={[
-                          styles.categoryText,
-                          selectedCategory === category.id &&
-                            styles.selectedCategoryText,
+                          styles.categoryItem,
+                          {
+                            backgroundColor:
+                              selectedCategory === category.id
+                                ? colorSet.icon // Use the main color for selected
+                                : colorSet.background, // Use the background for unselected
+                          },
                         ]}
+                        onPress={() => setSelectedCategory(category.id)}
                       >
-                        {category.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Ionicons
+                          name={category.icon as any}
+                          size={20}
+                          color={
+                            selectedCategory === category.id
+                              ? 'white' // Keep white for selected state
+                              : colorSet.icon // Use the icon color for unselected
+                          }
+                          style={styles.categoryIcon}
+                        />
+                        <Text
+                          style={[
+                            styles.categoryText,
+                            {
+                              color:
+                                selectedCategory === category.id
+                                  ? 'white' // Keep white for selected state
+                                  : colorSet.icon, // Use the icon color for unselected
+                            },
+                          ]}
+                        >
+                          {category.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
@@ -484,24 +506,16 @@ const styles = StyleSheet.create({
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F9F6',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
     margin: 4,
-  },
-  selectedCategory: {
-    backgroundColor: Colors.primary,
   },
   categoryIcon: {
     marginRight: 4,
   },
   categoryText: {
     fontSize: 12,
-    color: Colors.primary,
-  },
-  selectedCategoryText: {
-    color: 'white',
   },
   recentRecipientsContainer: {
     marginBottom: 24,
