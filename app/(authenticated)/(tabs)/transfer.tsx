@@ -12,7 +12,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors, { transactionColors } from '@/constants/Colors'; // Import transactionColors
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,6 +35,8 @@ const Transfer = () => {
   const isKeyboardVisible = useKeyboardVisibility();
   const toast = useAdaptiveToast();
   const { user } = useAuthStore();
+  const params = useLocalSearchParams();
+  const scannedAccount = params.scannedAccount as string;
 
   const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
@@ -51,6 +53,15 @@ const Transfer = () => {
   useEffect(() => {
     fetchRecentRecipients();
   }, []);
+
+  useEffect(() => {
+    // If there's a scanned account from QR code, set it and verify it
+    if (scannedAccount) {
+      setAccountNumber(scannedAccount);
+      // Optionally verify account immediately
+      verifyAccount(scannedAccount);
+    }
+  }, [scannedAccount]);
 
   const fetchRecentRecipients = async () => {
     setLoadingRecipients(true);
@@ -77,20 +88,6 @@ const Transfer = () => {
     } else {
       setAmount('');
     }
-  };
-
-  // Add validation function
-  const validateAmount = (): boolean => {
-    const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
-
-    if (numericAmount < MINIMUM_AMOUNT) {
-      setAmountError(
-        `Minimum transfer Rp ${MINIMUM_AMOUNT.toLocaleString('id-ID')}`
-      );
-      return false;
-    }
-
-    return true;
   };
 
   const handleSelectRecipient = (recipient: RecentRecipient) => {
@@ -159,6 +156,28 @@ const Transfer = () => {
           notes: notes,
         },
       });
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        toast.error('Rekening tujuan tidak ditemukan');
+      } else {
+        toast.error('Gagal memverifikasi rekening', {
+          description: error?.message || 'Silakan coba lagi nanti',
+        });
+      }
+    }
+  };
+
+  // Add this function to verify account on QR scan
+  const verifyAccount = async (account: string) => {
+    try {
+      const response = await axios.get(`/v1/accounts/${account}`);
+      // If successful, maybe store the recipient name
+      if (response.data.success && response.data.data) {
+        // You could store recipient info in state here if needed
+        toast.success('Rekening terverifikasi', {
+          description: `Penerima: ${response.data.data.full_name}`,
+        });
+      }
     } catch (error: any) {
       if (error?.response?.status === 404) {
         toast.error('Rekening tujuan tidak ditemukan');
@@ -244,14 +263,26 @@ const Transfer = () => {
                 <Text style={styles.label}>Nomor Rekening Tujuan</Text>
                 <View style={styles.accountInputContainer}>
                   <TextInput
-                    style={styles.accountInput}
+                    style={[
+                      styles.accountInput,
+                      scannedAccount ? styles.disabledInput : {},
+                    ]}
                     value={accountNumber}
                     onChangeText={handleAccountNumberChange}
                     keyboardType='numeric'
                     placeholder='700500121'
                     placeholderTextColor='#AAAAAA'
                     maxLength={9}
+                    editable={!scannedAccount} // Disable editing if from QR
                   />
+                  {scannedAccount && (
+                    <Ionicons
+                      name='qr-code'
+                      size={20}
+                      color={Colors.primary}
+                      style={styles.qrIcon}
+                    />
+                  )}
                 </View>
               </View>
 
@@ -601,5 +632,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 2,
+  },
+  disabledInput: {
+    backgroundColor: '#F5F5F5',
+    color: Colors.dark,
+  },
+  qrIcon: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
   },
 });

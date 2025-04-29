@@ -70,7 +70,7 @@ export default function TabsLayout() {
         />
 
         <Tabs.Screen
-          name='qris'
+          name='qr-code'
           options={{
             title: '',
             headerShown: false,

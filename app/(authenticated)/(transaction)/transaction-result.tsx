@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { format } from 'date-fns';
 import Logo from '@/assets/images/Logo.svg';
-import { formatCurrency, formatSnakeCase } from '@/utils/formatters';
+import { formatCurrency, formatSnakeCase, formatTransactionCategory } from '@/utils/formatters';
 
 const TransactionResultPage = () => {
   const router = useRouter();
@@ -127,7 +127,7 @@ const TransactionResultPage = () => {
                   {isTransfer ? 'Kategori' : 'Metode Top Up'}
                 </Text>
                 <Text style={styles.detailValue}>
-                  {formatSnakeCase(method)}
+                  {formatTransactionCategory(method) || formatSnakeCase(method)}
                 </Text>
               </View>
 
