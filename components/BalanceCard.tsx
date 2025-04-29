@@ -17,6 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import { defaultStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 import { formatCurrency } from '@/utils/formatters';
+import { useRouter } from 'expo-router';
 
 interface BalanceCardProps {
   balance: number;
@@ -24,6 +25,7 @@ interface BalanceCardProps {
 }
 
 const BalanceCard = ({ balance, accountNumber }: BalanceCardProps) => {
+  const router = useRouter();
   const [isBalanceVisible, setIsBalanceVisible] = useState(false);
   const [isAccountNumberVisible, setIsAccountNumberVisible] = useState(false);
 
@@ -46,6 +48,10 @@ const BalanceCard = ({ balance, accountNumber }: BalanceCardProps) => {
     } else {
       Alert.alert('Copied', 'Account number copied to clipboard');
     }
+  };
+
+  const navigateToHistory = () => {
+    router.push('/(authenticated)/(transaction)/history');
   };
 
   // Format account number to show only last 4 digits
@@ -86,23 +92,38 @@ const BalanceCard = ({ balance, accountNumber }: BalanceCardProps) => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.accountNumberContainer}>
-          <TouchableOpacity
-            onPress={toggleAccountNumberVisibility}
-            style={styles.accountNumberButton}
-          >
-            <Text style={styles.accountNumberLabel}>Nomor rekening</Text>
-            <Text style={styles.accountNumber}>{formatAccountNumber()}</Text>
-          </TouchableOpacity>
-
-          {isAccountNumberVisible && (
+        <View style={styles.cardFooter}>
+          <View style={styles.accountNumberContainer}>
             <TouchableOpacity
-              onPress={copyToClipboard}
-              style={styles.copyButton}
+              onPress={toggleAccountNumberVisibility}
+              style={styles.accountNumberButton}
             >
-              <Feather name='copy' size={16} color='#FFFFFF' />
+              <Text style={styles.accountNumberLabel}>Nomor rekening</Text>
+              <Text style={styles.accountNumber}>{formatAccountNumber()}</Text>
             </TouchableOpacity>
-          )}
+
+            {isAccountNumberVisible && (
+              <TouchableOpacity
+                onPress={copyToClipboard}
+                style={styles.copyButton}
+              >
+                <Feather name='copy' size={16} color='#FFFFFF' />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={navigateToHistory}
+            style={styles.historyButton}
+          >
+            <Feather
+              name='clock'
+              size={16}
+              color='#FFFFFF'
+              style={styles.historyIcon}
+            />
+            <Text style={styles.historyText}>Riwayat transaksi</Text>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
     </View>
@@ -138,9 +159,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     marginVertical: 8,
-    // backdropFilter: 'blur(10px)',
-    // backgroundColor: Colors.primaryDark,
-    // borderRadius: 10,
   },
   balanceAmount: {
     fontSize: 28,
@@ -151,9 +169,16 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 5,
   },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   accountNumberContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    maxWidth: '40%',
   },
   accountNumberButton: {
     flex: 1,
@@ -172,6 +197,22 @@ const styles = StyleSheet.create({
   copyButton: {
     padding: 5,
     marginLeft: 8,
+  },
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  historyIcon: {
+    marginRight: 6,
+  },
+  historyText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
