@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, SafeAreaView, StyleSheet, BackHandler } from 'react-native';
+import {
+  View,
+  SafeAreaView,
+  StyleSheet,
+  BackHandler,
+  Text,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAdaptiveToast } from '@/utils/toast';
@@ -13,6 +19,9 @@ const Page = () => {
   const router = useRouter();
   const toast = useAdaptiveToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorState, setErrorState] = useState(false);
+  const [firstPin, setFirstPin] = useState<string | null>(null);
+  const [step, setStep] = useState<'first' | 'confirm'>('first');
   const { token } = useAuthStore((state) => ({
     token: state.token,
   }));
@@ -31,9 +40,29 @@ const Page = () => {
     return () => backHandler.remove();
   }, []);
 
-  const handlePinComplete = async (pin: string) => {
+  const handleFirstPinComplete = (pin: string) => {
+    setFirstPin(pin);
+    setStep('confirm');
+  };
+
+  const handleConfirmPinComplete = async (pin: string) => {
+    if (pin !== firstPin) {
+      toast.error('PIN tidak cocok', {
+        description: 'PIN konfirmasi tidak sama dengan PIN pertama',
+        duration: 2000,
+      });
+      setErrorState(true);
+      setTimeout(() => {
+        setErrorState(false);
+        setStep('first');
+        setFirstPin(null);
+      }, 1000);
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setErrorState(false);
 
       const { success } = await setPinApi(
         {
@@ -57,10 +86,18 @@ const Page = () => {
       const errorMessage =
         error?.response?.data?.message ||
         'Gagal membuat PIN, silakan coba lagi';
-      
-        toast.error(errorMessage, {
+
+      setErrorState(true);
+      toast.error(errorMessage, {
         duration: 2000,
       });
+
+      // Reset to first step after error
+      setTimeout(() => {
+        setStep('first');
+        setFirstPin(null);
+        setErrorState(false);
+      }, 1000);
     } finally {
       setIsLoading(false);
     }
@@ -74,13 +111,33 @@ const Page = () => {
 
       <View style={styles.contentContainer}>
         <View style={styles.content}>
-          <PinInput
-            label='Masukkan PIN baru'
-            confirmLabel='Konfirmasi PIN baru'
-            onComplete={handlePinComplete}
-            loading={isLoading}
-            pinLength={6}
-          />
+          {step === 'first' && (
+            <>
+              <Text style={styles.stepIndicator}>Langkah 1 dari 2</Text>
+              <PinInput
+                label='Masukkan PIN baru'
+                onComplete={handleFirstPinComplete}
+                loading={isLoading}
+                pinLength={6}
+                isConfirmationMode={false}
+                resetOnError={errorState}
+              />
+            </>
+          )}
+
+          {step === 'confirm' && (
+            <>
+              <Text style={styles.stepIndicator}>Langkah 2 dari 2</Text>
+              <PinInput
+                label='Konfirmasi PIN'
+                onComplete={handleConfirmPinComplete}
+                loading={isLoading}
+                pinLength={6}
+                isConfirmationMode={false}
+                resetOnError={errorState}
+              />
+            </>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -104,6 +161,18 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 20,
     alignItems: 'center',
+  },
+  stepIndicator: {
+    fontSize: 14,
+    color: Colors.gray,
+    marginBottom: 8,
+  },
+  stepDescription: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: 24,
+    textAlign: 'center',
   },
 });
 

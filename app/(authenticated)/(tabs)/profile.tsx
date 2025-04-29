@@ -247,7 +247,7 @@ const ProfilePage = () => {
                   source={
                     avatarUrl
                       ? { uri: avatarUrl }
-                      : require('@/assets/images/sagiri.jpeg')
+                      : require('@/assets/images/cat-wink.png')
                   }
                   style={styles.profileImage}
                 />
