@@ -37,31 +37,34 @@ const Page = () => {
   const validateInputs = () => {
     const newErrors: Record<string, string> = {};
 
-    // if (!email) {
-    //   newErrors.email = 'Email is required';
-    // } else if (!/\S+@\S+\.\S+/.test(email)) {
-    //   newErrors.email = 'Invalid email format';
-    // }
+    if (!email) {
+      newErrors.email = 'Email wajib diisi';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email tidak valid';
+    }
 
-    // if (!fullName) {
-    //   newErrors.fullName = 'Full name is required';
-    // }
+    if (!fullName) {
+      newErrors.fullName = 'Nama lengkap wajib diisi';
+    }
 
-    // if (!phoneNumber) {
-    //   newErrors.phoneNumber = 'Phone number is required';
-    // } else if (!/^62\d{9,12}$/.test(phoneNumber)) {
-    //   newErrors.phoneNumber = 'Phone number must start with 62 and be 11-14 digits';
-    // }
+    if (!phoneNumber) {
+      newErrors.phoneNumber = 'No HP wajib diisi';
+    } else if (!/^[1-9]\d{1,3}\d{6,14}$/.test(phoneNumber)) {
+      newErrors.phoneNumber =
+        'No HP harus diawali kode negara dan panjang maksimal 14 digit';
+    }
 
-    // if (!password) {
-    //   newErrors.password = 'Password is required';
-    // } else if (password.length < 8) {
-    //   newErrors.password = 'Password must be at least 8 characters';
-    // }
-
-    // if (password !== confirmPassword) {
-    //   newErrors.confirmPassword = 'Passwords do not match';
-    // }
+    if (!password) {
+      newErrors.password = 'Password wajib diisi';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password minimal 8 karakter';
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = 'Password harus mengandung huruf kapital';
+    } else if (!/[!@#$%^&*]/.test(password)) {
+      newErrors.password = 'Password harus mengandung karakter khusus';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Konfirmasi password tidak sesuai';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -85,21 +88,26 @@ const Page = () => {
 
       if (response.success) {
         await loginStore(email, password);
+        router.replace('./create-pin');
       }
-
-      router.replace('./create-pin');
     } catch (error: any) {
-      // Handle specific error responses
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.errors?.[0] ||
-        'Registrasi gagal';
+      const errorMessages = error?.response?.data?.errors;
 
-      // Show error toast
-      toast.error('Registrasi gagal', {
-        description: errorMessage,
-        duration: 4000,
-      });
+      if (error?.response?.data?.message) {
+        toast.error('Registrasi gagal', {
+          description: error?.response?.data?.message,
+          duration: 2000,
+        });
+      } else if (Array.isArray(errorMessages) && errorMessages.length > 0) {
+        const errorDescription = errorMessages
+          .map((msg) => `• ${msg}`)
+          .join('\n');
+
+        toast.error('Registrasi gagal', {
+          description: errorDescription,
+          duration: 2000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -113,17 +121,18 @@ const Page = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.topSection}>
-            <Text style={styles.greeting}>Assalamualaikum sahabat!</Text>
-            <Text style={styles.subtitle}>
-              Registrasi untuk memulai perjalanan keuanganmu!
-            </Text>
-          </View>
+        <View style={styles.topSection}>
+          <Text style={styles.greeting}>Assalamualaikum sahabat!</Text>
+          <Text style={styles.subtitle}>
+            Registrasi untuk memulai perjalanan keuanganmu!
+          </Text>
+        </View>
 
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={true}
+        >
           <View style={styles.formContainer}>
             <View style={styles.formContent}>
               <View style={styles.inputGroup}>
@@ -291,7 +300,6 @@ const styles = StyleSheet.create({
   },
   topSection: {
     paddingHorizontal: 24,
-    paddingTop: 20,
     paddingBottom: 30,
   },
   greeting: {
@@ -306,17 +314,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  formContainer: {
+  scrollView: {
     flex: 1,
+    backgroundColor: Colors.primary, // Set background color to match container
+  },
+  scrollViewContent: {
+    flexGrow: 1, // This makes the content grow to fill available space
+  },
+  formContainer: {
     backgroundColor: 'white',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
+    minHeight: '100%', // Makes the white container at least as tall as the scroll view
   },
   formContent: {
-    flex: 1,
     paddingHorizontal: 24,
     paddingTop: 30,
-    paddingBottom: 20,
+    paddingBottom: 40, // Add enough padding at the bottom
   },
   inputGroup: {
     marginBottom: 16,

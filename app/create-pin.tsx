@@ -6,8 +6,6 @@ import { useAdaptiveToast } from '@/utils/toast';
 import { useAuthStore } from '@/store/auth-store';
 import { setPinApi } from '@/lib/api/pin';
 import Colors from '@/constants/Colors';
-
-// Import our new components
 import PinPageHeader from '@/components/pin/PinPageHeader';
 import PinInput from '@/components/pin/PinInput';
 
@@ -19,15 +17,14 @@ const Page = () => {
     token: state.token,
   }));
 
-  // Prevent going back with hardware button
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        toast.info('PIN setup required', {
-          description: 'Please complete pin setup to continue',
+        toast.info('PIN wajib diisi', {
+          description: 'Silakan isi PIN untuk melanjutkan',
         });
-        return true; // Prevent default behavior
+        return true;
       }
     );
 
@@ -47,11 +44,11 @@ const Page = () => {
       );
 
       if (!success) {
-        throw new Error('Failed to create PIN. Please try again.');
+        throw new Error('Gagal membuat PIN');
       }
 
-      toast.success('PIN created successfully!', {
-        description: 'Welcome to RizqTracker',
+      toast.success('PIN berhasil dibuat', {
+        description: 'Selamat datang di aplikasi Rizqtracker!',
         duration: 3000,
       });
 
@@ -59,8 +56,11 @@ const Page = () => {
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.message ||
-        'Failed to create PIN. Please try again.';
-      toast.error('Failed', { description: errorMessage });
+        'Gagal membuat PIN, silakan coba lagi';
+      
+        toast.error(errorMessage, {
+        duration: 2000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -70,15 +70,14 @@ const Page = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar style='light' backgroundColor={Colors.primary} />
 
-      <PinPageHeader title='Create PIN' />
+      <PinPageHeader title='Buat PIN' />
 
       <View style={styles.contentContainer}>
         <View style={styles.content}>
           <PinInput
-            label='Enter your PIN'
-            confirmLabel='Confirm your PIN'
+            label='Masukkan PIN baru'
+            confirmLabel='Konfirmasi PIN baru'
             onComplete={handlePinComplete}
-            isConfirmationMode={true}
             loading={isLoading}
             pinLength={6}
           />

@@ -13,7 +13,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Button } from '@/components/ui/button';
 import Colors from '@/constants/Colors';
 import PinDots from './PinDots';
 import NumPad from './NumPad';
