@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import Colors from '@/constants/Colors';
+import Colors, { transactionColors } from '@/constants/Colors';
 import Header from '@/components/home/Header';
 import { useAuthStore } from '@/store/auth-store';
 import BalanceCard from '@/components/BalanceCard';
@@ -73,17 +73,13 @@ export default function AuthenticatedHome() {
     setRefreshing(true);
 
     try {
-      // First, fetch the cashflow data
       const result = await fetchCashflowData(activePeriod);
 
-      // If successful, refresh user data to ensure balance is accurate
       if (result.success && authStore.user) {
         try {
-          // Get latest user details from API
           const response = await axios.get('/v1/users/detail');
 
           if (response.data.success) {
-            // Update the user in auth store
             authStore.setUser(response.data.data);
             console.log('User data refreshed to ensure accurate balance');
           }
@@ -94,7 +90,6 @@ export default function AuthenticatedHome() {
     } catch (error) {
       console.error('Error during refresh:', error);
     } finally {
-      // Always stop the refreshing indicator
       setRefreshing(false);
     }
   }, [activePeriod, authStore, axios]);
@@ -103,7 +98,6 @@ export default function AuthenticatedHome() {
     setActivePeriod(period);
   };
 
-  // Get appropriate transaction list based on active tab
   const getTransactions = (): FormattedTransaction[] => {
     if (activeTab === 'pemasukan' && incomeData?.income_details) {
       const topupTransactions = incomeData.income_details.topup_data.map(
@@ -116,6 +110,8 @@ export default function AuthenticatedHome() {
             month: 'long',
             day: 'numeric',
           }),
+          iconColor: transactionColors.topup.icon,
+          backgroundColor: transactionColors.topup.background,
         })
       );
 
@@ -129,6 +125,8 @@ export default function AuthenticatedHome() {
             month: 'long',
             day: 'numeric',
           }),
+          iconColor: transactionColors.transfer.icon,
+          backgroundColor: transactionColors.transfer.background,
         })
       );
 
@@ -142,6 +140,10 @@ export default function AuthenticatedHome() {
 
       Object.entries(expenseDetails).forEach(([category, transactions]) => {
         if (Array.isArray(transactions)) {
+          const categoryColors =
+            transactionColors[category as keyof typeof transactionColors] ||
+            transactionColors.default;
+
           const formattedTransactions = transactions.map((item) => ({
             ...item,
             type: category,
@@ -151,6 +153,8 @@ export default function AuthenticatedHome() {
               month: 'long',
               day: 'numeric',
             }),
+            iconColor: categoryColors.icon,
+            backgroundColor: categoryColors.background,
           }));
 
           allExpenses = [...allExpenses, ...formattedTransactions];
@@ -166,7 +170,6 @@ export default function AuthenticatedHome() {
     return [];
   };
 
-  // Calculate financial summary data
   const getTotalIncome = (): number => {
     if (!summaryData?.summary) return 0;
     const { total_topup, total_transfer } = summaryData.summary.income;
@@ -196,19 +199,15 @@ export default function AuthenticatedHome() {
     const totalIncome = getTotalIncome();
     const totalExpense = getTotalExpense();
 
-    // Handle edge cases
     if (totalIncome === 0 && totalExpense === 0) {
-      return 0; // No financial activity
+      return 0;
     }
 
     if (totalIncome === 0 && totalExpense > 0) {
-      return 100; // Pure deficit
+      return 100;
     }
 
-    // For normal cases
     const ratio = totalExpense / totalIncome;
-
-    // Cap the percentage for UI display purposes
     const cappedRatio = Math.min(ratio, 2); // Cap at 200%
 
     return Math.round(cappedRatio * 100);
@@ -233,12 +232,16 @@ export default function AuthenticatedHome() {
         amount: summary.total_topup,
         count: topup_data.length,
         icon: 'arrow-up-circle',
+        iconColor: transactionColors.topup.icon,
+        backgroundColor: transactionColors.topup.background,
       },
       {
         name: 'Total Transfer',
         amount: summary.total_transfer,
         count: transfer_data.length,
         icon: 'swap-horizontal',
+        iconColor: transactionColors.transfer.icon,
+        backgroundColor: transactionColors.transfer.background,
       },
     ];
   };
@@ -269,30 +272,40 @@ export default function AuthenticatedHome() {
         amount: summary.total_needs,
         count: needs.length,
         icon: 'basket',
+        iconColor: transactionColors.needs.icon,
+        backgroundColor: transactionColors.needs.background,
       },
       {
         name: 'Belanja',
         amount: summary.total_shopping,
         count: shopping.length,
         icon: 'cart',
+        iconColor: transactionColors.shopping.icon,
+        backgroundColor: transactionColors.shopping.background,
       },
       {
         name: 'Transportasi',
         amount: summary.total_transport,
         count: transport.length,
         icon: 'car',
+        iconColor: transactionColors.transport.icon,
+        backgroundColor: transactionColors.transport.background,
       },
       {
         name: 'Transfer Kekayaan',
         amount: summary.total_transfer_of_wealth,
         count: transfer_of_wealth.length,
         icon: 'wallet',
+        iconColor: transactionColors.transfer_of_wealth.icon,
+        backgroundColor: transactionColors.transfer_of_wealth.background,
       },
       {
         name: 'Tagihan',
         amount: summary.total_bills,
         count: bills.length,
         icon: 'receipt',
+        iconColor: transactionColors.bills.icon,
+        backgroundColor: transactionColors.bills.background,
       },
     ];
   };
