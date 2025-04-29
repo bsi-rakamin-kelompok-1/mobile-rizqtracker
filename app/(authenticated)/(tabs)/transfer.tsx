@@ -45,6 +45,8 @@ const Transfer = () => {
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<TransferCategory>('needs');
+  const MINIMUM_AMOUNT = 10000;
+  const [amountError, setAmountError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRecentRecipients();
@@ -63,17 +65,32 @@ const Transfer = () => {
     }
   };
 
+  // Update handleAmountChange to clear errors when typing
   const handleAmountChange = (text: string) => {
     const numericValue = text.replace(/[^0-9]/g, '');
+    setAmountError(null); // Clear error when editing
 
     if (numericValue) {
       const numericAmount = parseInt(numericValue, 10);
       const formatted = new Intl.NumberFormat('id-ID').format(numericAmount);
-
       setAmount(formatted);
     } else {
       setAmount('');
     }
+  };
+
+  // Add validation function
+  const validateAmount = (): boolean => {
+    const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
+
+    if (numericAmount < MINIMUM_AMOUNT) {
+      setAmountError(
+        `Minimum transfer Rp ${MINIMUM_AMOUNT.toLocaleString('id-ID')}`
+      );
+      return false;
+    }
+
+    return true;
   };
 
   const handleSelectRecipient = (recipient: RecentRecipient) => {
@@ -82,7 +99,10 @@ const Transfer = () => {
     setAccountNumber(recipientAccountNumber.substring(0, 9));
   };
 
+  // Update handleTransfer to check minimum amount
   const handleTransfer = async () => {
+    setAmountError(null);
+
     if (!accountNumber || !amount) {
       toast.error('Mohon lengkapi data', {
         description: 'Nomor rekening dan nominal transfer wajib diisi',
@@ -104,7 +124,21 @@ const Transfer = () => {
       return;
     }
 
+    // Check minimum amount
     const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
+    if (numericAmount < MINIMUM_AMOUNT) {
+      setAmountError(
+        `Minimum transfer Rp ${MINIMUM_AMOUNT.toLocaleString('id-ID')}`
+      );
+      toast.error('Nominal tidak valid', {
+        description: `Minimum transfer Rp ${MINIMUM_AMOUNT.toLocaleString(
+          'id-ID'
+        )}`,
+        duration: 2000,
+      });
+      return;
+    }
+
     if (numericAmount > (user?.account?.balance || 0)) {
       toast.error('Saldo tidak mencukupi', {
         description: 'Nominal transfer melebihi saldo yang tersedia',
@@ -161,6 +195,14 @@ const Transfer = () => {
     }
   };
 
+  // Update button disabled check
+  const isTransferButtonDisabled = () => {
+    if (!accountNumber || !amount) return true;
+
+    const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
+    return accountNumber.length !== 9 || numericAmount < MINIMUM_AMOUNT;
+  };
+
   return (
     <>
       <StatusBar barStyle='light-content' backgroundColor={Colors.primary} />
@@ -213,7 +255,7 @@ const Transfer = () => {
                 </View>
               </View>
 
-              {/* Transfer Amount Input */}
+              {/* Transfer Amount Input - now with error message */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nominal Transfer</Text>
                 <View style={styles.amountInputContainer}>
@@ -227,12 +269,17 @@ const Transfer = () => {
                     placeholderTextColor='#AAAAAA'
                   />
                 </View>
-                <Text style={styles.balanceInfo}>
-                  Saldo Tersedia: Rp{' '}
-                  {new Intl.NumberFormat('id-ID').format(
-                    user?.account?.balance || 0
-                  )}
-                </Text>
+                <View style={{ flexDirection: 'row', marginTop: 4, justifyContent: 'space-between' }}>
+                  <Text style={styles.helperText}>
+                    Minimum transfer Rp10.000
+                  </Text>
+                  <Text style={styles.balanceInfo}>
+                    Saldo: Rp
+                    {new Intl.NumberFormat('id-ID').format(
+                      user?.account?.balance || 0
+                    )}
+                  </Text>
+                </View>
               </View>
 
               {/* Transfer Category */}
@@ -337,10 +384,10 @@ const Transfer = () => {
                 <Button
                   style={[
                     styles.transferButton,
-                    !accountNumber || !amount ? styles.disabledButton : {},
+                    isTransferButtonDisabled() ? styles.disabledButton : {},
                   ]}
                   onPress={handleTransfer}
-                  disabled={!accountNumber || !amount}
+                  disabled={isTransferButtonDisabled()}
                 >
                   <Text style={styles.transferButtonText}>Lanjut</Text>
                 </Button>
@@ -528,5 +575,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  helperText: {
+    fontSize: 12,
+    color: Colors.gray,
+    marginTop: 4,
+    marginLeft: 2,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 2,
   },
 });

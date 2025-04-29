@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAdaptiveToast } from '@/utils/toast';
 import {
   StyleSheet,
   Text,
@@ -31,6 +32,9 @@ const Topup = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const isKeyboardVisible = useKeyboardVisibility();
+  const toast = useAdaptiveToast();
+  const [error, setError] = useState<string | null>(null);
+  const MINIMUM_AMOUNT = 10000;
 
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -57,9 +61,43 @@ const Topup = () => {
     },
   ];
 
+  const handleAmountChange = (text: string) => {
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setError(null);
+
+    if (numericValue) {
+      const numericAmount = parseInt(numericValue, 10);
+      const formatted = new Intl.NumberFormat('id-ID').format(numericAmount);
+      setAmount(formatted);
+    } else {
+      setAmount('');
+    }
+  };
+
+  const validateAmount = () => {
+    const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
+
+    if (numericAmount < MINIMUM_AMOUNT) {
+      setError(`Minimum top up Rp ${MINIMUM_AMOUNT.toLocaleString('id-ID')}`);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleTopUp = () => {
     if (!amount || !selectedMethod) {
-      // Show error or validation message
+      return;
+    }
+
+    // Validate minimum amount
+    if (!validateAmount()) {
+      toast.error('Nominal tidak valid', {
+        description: `Minimum top up Rp ${MINIMUM_AMOUNT.toLocaleString(
+          'id-ID'
+        )}`,
+        duration: 2000,
+      });
       return;
     }
 
@@ -67,11 +105,20 @@ const Topup = () => {
     router.push({
       pathname: '/(authenticated)/(transaction)/transaction-pin',
       params: {
+        transaction_type: 'topup',
         amount: amount.replace(/[^0-9]/g, ''),
         method: selectedMethod,
         notes: notes,
       },
     });
+  };
+
+  // Calculate if the button should be disabled
+  const isSubmitDisabled = () => {
+    if (!amount || !selectedMethod) return true;
+
+    const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
+    return numericAmount < MINIMUM_AMOUNT;
   };
 
   const toggleDropdown = () => {
@@ -81,19 +128,6 @@ const Topup = () => {
   const selectPaymentMethod = (method: PaymentMethod) => {
     setSelectedMethod(method);
     setIsDropdownOpen(false);
-  };
-
-  const handleAmountChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-
-    if (numericValue) {
-      const numericAmount = parseInt(numericValue, 10);
-      const formatted = new Intl.NumberFormat('id-ID').format(numericAmount);
-
-      setAmount(formatted);
-    } else {
-      setAmount('');
-    }
   };
 
   const selectedOption = paymentOptions.find(
@@ -150,6 +184,8 @@ const Topup = () => {
                     placeholderTextColor='#AAAAAA'
                   />
                 </View>
+                {error && <Text style={styles.errorText}>{error}</Text>}
+                <Text style={styles.helperText}>Minimum Rp 10.000</Text>
               </View>
 
               {/* Payment Method Dropdown */}
@@ -215,19 +251,18 @@ const Topup = () => {
 
             {!isKeyboardVisible && (
               <View style={styles.buttonContainer}>
-              <Button
-                style={[
-                  styles.topupButton,
-                  !amount || !selectedMethod ? styles.disabledButton : {},
-                ]}
-                onPress={handleTopUp}
-                disabled={!amount || !selectedMethod}
-              >
-                <Text style={styles.topupButtonText}>Lanjut</Text>
-              </Button>
-            </View>
+                <Button
+                  style={[
+                    styles.topupButton,
+                    isSubmitDisabled() ? styles.disabledButton : {},
+                  ]}
+                  onPress={handleTopUp}
+                  disabled={isSubmitDisabled()}
+                >
+                  <Text style={styles.topupButtonText}>Lanjut</Text>
+                </Button>
+              </View>
             )}
-
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -235,8 +270,7 @@ const Topup = () => {
   );
 };
 
-export default Topup;
-
+// Add these new styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -375,4 +409,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 2,
+  },
+  helperText: {
+    fontSize: 12,
+    color: Colors.gray,
+    marginTop: 6,
+    marginLeft: 2,
+  },
 });
+
+export default Topup;
