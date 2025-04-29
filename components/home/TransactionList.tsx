@@ -47,8 +47,8 @@ const TransactionList = ({ transactions, isExpense }: TransactionListProps) => {
               <Ionicons
                 name={getTransactionIcon(transaction.type) as any}
                 size={20}
-                color={isExpense ? Colors.error : Colors.primary}
-                style={styles.transactionIcon}
+                color={transaction.iconColor}
+                style={[styles.transactionIcon, { backgroundColor: transaction.backgroundColor }]}
               />
             </View>
             <View style={styles.transactionDate}>

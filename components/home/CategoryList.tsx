@@ -15,7 +15,8 @@ const CategoryList = ({ categories, isExpense }: CategoryListProps) => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
-          Tidak ada data {isExpense ? 'pengeluaran' : 'pemasukan'} untuk periode ini
+          Tidak ada data {isExpense ? 'pengeluaran' : 'pemasukan'} untuk periode
+          ini
         </Text>
       </View>
     );
@@ -29,8 +30,8 @@ const CategoryList = ({ categories, isExpense }: CategoryListProps) => {
             <Ionicons
               name={item.icon as any}
               size={20}
-              color={isExpense ? Colors.error : Colors.primary}
-              style={styles.categoryIcon}
+              color={item.iconColor}
+              style={[styles.categoryIcon, { backgroundColor: item.backgroundColor }]}
             />
             <View>
               <Text style={styles.categoryName}>{item.name}</Text>
