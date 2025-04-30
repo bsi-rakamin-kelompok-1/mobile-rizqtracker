@@ -23,6 +23,7 @@ import useAxiosPrivate from '@/hooks/use-axios-private';
 import * as ImagePicker from 'expo-image-picker';
 import { useAdaptiveToast } from '@/utils/toast';
 import { useRouter } from 'expo-router';
+import { Image as ExpoImage } from 'expo-image';
 
 const ProfilePage = () => {
   const { user, setUser, logout } = useAuthStore();
@@ -90,7 +91,7 @@ const ProfilePage = () => {
       if (response.data.success) {
         setUser(response.data.data);
         console.log('authUser: ', user);
-        
+
         toast.success('Profil berhasil diperbarui');
       }
     } catch (error) {
@@ -128,7 +129,6 @@ const ProfilePage = () => {
   const uploadAvatar = async (uri: string) => {
     setIsUploadingAvatar(true);
 
-    // Create form data
     const formData = new FormData();
     const filename = uri.split('/').pop() || 'avatar.jpg';
     const match = /\.(\w+)$/.exec(filename);
@@ -149,7 +149,6 @@ const ProfilePage = () => {
 
       if (response.data.success) {
         setAvatarUrl(response.data.data);
-        // Update user in auth store with the new avatar URL
         setUser({
           ...user!,
           avatar_url: response.data.data,
@@ -209,14 +208,18 @@ const ProfilePage = () => {
           onPress={() => setIsAvatarModalVisible(false)}
         >
           <View style={styles.modalContent}>
-            <Image
+            <ExpoImage
               source={
                 avatarUrl
                   ? { uri: avatarUrl }
                   : require('@/assets/images/cat-wink.png')
               }
               style={styles.modalAvatarImage}
-              resizeMode='contain'
+              contentFit='contain'
+              transition={{
+                duration: 1000,
+                timing: 'ease-in-out',
+              }}
             />
           </View>
         </TouchableOpacity>
@@ -243,13 +246,18 @@ const ProfilePage = () => {
               </View>
             ) : (
               <TouchableOpacity onPress={handleAvatarClick}>
-                <Image
+                <ExpoImage
                   source={
                     avatarUrl
                       ? { uri: avatarUrl }
                       : require('@/assets/images/cat-wink.png')
                   }
                   style={styles.profileImage}
+                  contentFit='cover'
+                  transition={{
+                    duration: 1000,
+                    timing: 'ease-in-out',
+                  }}
                 />
               </TouchableOpacity>
             )}
