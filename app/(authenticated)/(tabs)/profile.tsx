@@ -12,6 +12,7 @@ import {
   Alert,
   Modal,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import Colors from '@/constants/Colors';
@@ -195,6 +196,9 @@ const ProfilePage = () => {
   };
 
   return (
+    <>
+      <StatusBar barStyle='light-content' backgroundColor={Colors.background} />
+    
     <SafeAreaView style={styles.container}>
       {/* Avatar Modal */}
       <Modal
@@ -329,6 +333,7 @@ const ProfilePage = () => {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 };
 

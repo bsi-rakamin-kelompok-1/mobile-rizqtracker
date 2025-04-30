@@ -93,7 +93,7 @@ const QRCodeScreen = () => {
 
   return (
     <>
-      <StatusBar style='light' backgroundColor={Colors.primary} />
+      <StatusBar style='light' backgroundColor={Colors.background} />
       <SafeAreaView style={styles.container}>
         <View
           style={[

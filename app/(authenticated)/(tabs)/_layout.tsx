@@ -9,7 +9,7 @@ export default function TabsLayout() {
   const isKeyboardVisible = useKeyboardVisibility();
 
   useEffect(() => {
-    StatusBar.setBackgroundColor(Colors.primary);
+    StatusBar.setBackgroundColor(Colors.background);
     StatusBar.setBarStyle('light-content');
 
     return () => {
