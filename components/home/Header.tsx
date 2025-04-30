@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { defaultStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
+import { Image as ExpoImage } from 'expo-image';
 
 interface HeaderProps {
   userName: string;
@@ -13,18 +14,21 @@ const Header = ({ userName, avatarUrl, onAvatarPress }: HeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.greetingContainer}>
-        <Text style={styles.greeting}>Assalamu'alaikum, {userName.split(" ")[0]}!</Text>
+        <Text style={styles.greeting}>
+          Assalamu'alaikum, {userName.split(' ')[0]}!
+        </Text>
         <Text style={styles.subGreeting}>
           Berikut adalah catatan finansialmu.
         </Text>
       </View>
       <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
-        <Image
+        <ExpoImage
           source={
             avatarUrl
               ? { uri: avatarUrl }
               : require('@/assets/images/cat-wink.png')
           }
+          key={avatarUrl}
           style={styles.avatar}
         />
       </TouchableOpacity>

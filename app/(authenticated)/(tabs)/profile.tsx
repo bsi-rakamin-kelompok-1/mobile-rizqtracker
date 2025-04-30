@@ -152,7 +152,9 @@ const ProfilePage = () => {
           ...user!,
           avatar_url: response.data.data,
         });
-        toast.success('Avatar berhasil diperbarui');
+        toast.success('Avatar berhasil diperbarui', {
+          duration: 1000,
+        });
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -213,6 +215,7 @@ const ProfilePage = () => {
                   ? { uri: avatarUrl }
                   : require('@/assets/images/cat-wink.png')
               }
+              key={avatarUrl}
               style={styles.modalAvatarImage}
               contentFit='contain'
               transition={{
@@ -251,6 +254,7 @@ const ProfilePage = () => {
                       ? { uri: avatarUrl }
                       : require('@/assets/images/cat-wink.png')
                   }
+                  key={avatarUrl}
                   style={styles.profileImage}
                   contentFit='cover'
                   transition={{
