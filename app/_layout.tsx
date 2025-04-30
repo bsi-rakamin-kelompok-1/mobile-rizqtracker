@@ -113,6 +113,18 @@ const InitialLayout = () => {
         }} 
       />
 
+      <Stack.Screen
+        name='+not-found'
+        options={{
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerBackVisible: false,
+          headerShown: false,
+          headerStyle: { backgroundColor: Colors.primary },
+        }} 
+      />
+
     </Stack>
   );
 };

@@ -29,7 +29,6 @@ import {
 
 export default function AuthenticatedHome() {
   const router = useRouter();
-  const navigation = useNavigation();
   const axios = useAxiosPrivate();
   const authStore = useAuthStore();
   const [activeTab, setActiveTab] = useState('pemasukan');
