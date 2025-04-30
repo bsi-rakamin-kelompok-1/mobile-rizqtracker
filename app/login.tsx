@@ -24,44 +24,38 @@ const Page = () => {
   const toast = useAdaptiveToast();
   const authStore = useAuthStore();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('rihlan1@gmail.com');
+  const [password, setPassword] = useState('Validpassword123#');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Track if back was pressed once
     let backPressedOnce = false;
 
     const handleBackPress = () => {
       if (backPressedOnce) {
-        // If pressed twice, exit the app
         BackHandler.exitApp();
         return true;
       }
 
-      // First press
       backPressedOnce = true;
       toast.info('Keluar aplikasi', {
         description: 'Tekan sekali lagi untuk keluar',
         duration: 2000,
       });
 
-      // Reset the backPressedOnce flag after 2 seconds
       setTimeout(() => {
         backPressedOnce = false;
       }, 2000);
 
-      return true; // Prevent default behavior
+      return true;
     };
 
-    // Add back press event listener
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       handleBackPress
     );
 
-    // Clean up
     return () => backHandler.remove();
   }, [toast]);
 
@@ -88,25 +82,20 @@ const Page = () => {
     }
 
     try {
-      // Use the login action from auth store
       const user = await authStore.login(email, password);
 
-      // Show success toast
       toast.success('Login berhasil!', {
         description: `Selamat datang, ${user.full_name}!`,
         duration: 1000,
       });
 
-      // Navigate to authenticated area
       router.replace('/(authenticated)/(tabs)');
     } catch (error: any) {
-      // Handle specific error responses
       const errorMessage =
-        error.response?.data?.message ||
         error.response?.data?.errors?.[0] ||
+        error.response?.data?.message ||
         'Login gagal';
 
-      // Show error toast
       toast.error('Login gagal', {
         description: errorMessage,
         duration: 2000,

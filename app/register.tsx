@@ -58,10 +58,6 @@ const Page = () => {
       newErrors.password = 'Password wajib diisi';
     } else if (password.length < 8) {
       newErrors.password = 'Password minimal 8 karakter';
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = 'Password harus mengandung huruf kapital';
-    } else if (!/[!@#$%^&*]/.test(password)) {
-      newErrors.password = 'Password harus mengandung karakter khusus';
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Konfirmasi password tidak sesuai';
     }

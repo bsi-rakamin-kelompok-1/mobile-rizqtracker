@@ -90,8 +90,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return user;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.errors?.[0] ||
+      const errorMessage = error.response?.data?.errors?.[0] ||
+        error.response?.data?.message ||
         'Login failed. Please check your credentials.';
 
       set({ isLoading: false, error: errorMessage, isAuthenticated: false });
