@@ -24,11 +24,11 @@ const Page = () => {
   const router = useRouter();
   const toast = useAdaptiveToast();
   const { login: loginStore } = useAuthStore();
-  const [email, setEmail] = useState('rihlan1@gmail.com');
-  const [fullName, setFullName] = useState('Bear Dummy');
-  const [phoneNumber, setPhoneNumber] = useState('6281244442223');
-  const [password, setPassword] = useState('Validpassword123#');
-  const [confirmPassword, setConfirmPassword] = useState('Validpassword123#');
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
