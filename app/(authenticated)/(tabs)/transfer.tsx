@@ -225,7 +225,7 @@ const Transfer = () => {
   return (
     <>
       <StatusBar barStyle='light-content' backgroundColor={Colors.primary} />
-      <SafeAreaView style={[styles.container]}>
+      <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -258,7 +258,6 @@ const Transfer = () => {
             keyboardShouldPersistTaps='handled'
           >
             <View style={styles.formContainer}>
-              {/* Account Number Input */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nomor Rekening Tujuan</Text>
                 <View style={styles.accountInputContainer}>
@@ -273,7 +272,7 @@ const Transfer = () => {
                     placeholder='700500121'
                     placeholderTextColor='#AAAAAA'
                     maxLength={9}
-                    editable={!scannedAccount} // Disable editing if from QR
+                    editable={!scannedAccount}
                   />
                   {scannedAccount && (
                     <Ionicons
@@ -286,7 +285,6 @@ const Transfer = () => {
                 </View>
               </View>
 
-              {/* Transfer Amount Input - now with error message */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nominal Transfer</Text>
                 <View style={styles.amountInputContainer}>
@@ -319,12 +317,10 @@ const Transfer = () => {
                 </View>
               </View>
 
-              {/* Transfer Category - Updated to use transactionColors */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Kategori Transfer</Text>
                 <View style={styles.categoriesContainer}>
                   {transferCategories.map((category) => {
-                    // Get the category color from transactionColors
                     const colorSet =
                       transactionColors[
                         category.id as keyof typeof transactionColors
@@ -338,8 +334,8 @@ const Transfer = () => {
                           {
                             backgroundColor:
                               selectedCategory === category.id
-                                ? colorSet.icon // Use the main color for selected
-                                : colorSet.background, // Use the background for unselected
+                                ? colorSet.icon 
+                                : colorSet.background, 
                           },
                         ]}
                         onPress={() => setSelectedCategory(category.id)}
@@ -349,8 +345,8 @@ const Transfer = () => {
                           size={20}
                           color={
                             selectedCategory === category.id
-                              ? 'white' // Keep white for selected state
-                              : colorSet.icon // Use the icon color for unselected
+                              ? 'white' 
+                              : colorSet.icon 
                           }
                           style={styles.categoryIcon}
                         />
@@ -360,8 +356,8 @@ const Transfer = () => {
                             {
                               color:
                                 selectedCategory === category.id
-                                  ? 'white' // Keep white for selected state
-                                  : colorSet.icon, // Use the icon color for unselected
+                                  ? 'white' 
+                                  : colorSet.icon, 
                             },
                           ]}
                         >
@@ -373,7 +369,6 @@ const Transfer = () => {
                 </View>
               </View>
 
-              {/* Recent Recipients */}
               <View style={styles.recentRecipientsContainer}>
                 <Text style={styles.label}>Penerima Terakhir</Text>
                 {loadingRecipients ? (
@@ -418,7 +413,6 @@ const Transfer = () => {
                 )}
               </View>
 
-              {/* Notes Input */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Catatan (opsional)</Text>
                 <TextInput

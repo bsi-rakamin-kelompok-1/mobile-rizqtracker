@@ -90,7 +90,6 @@ const ProfilePage = () => {
 
       if (response.data.success) {
         setUser(response.data.data);
-        console.log('authUser: ', user);
 
         toast.success('Profil berhasil diperbarui');
       }

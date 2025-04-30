@@ -28,7 +28,6 @@ import { id } from 'date-fns/locale';
 import { Picker } from '@react-native-picker/picker';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 
-// Define transaction type
 interface Transaction {
   id: string;
   sender_full_name: string;
@@ -68,7 +67,6 @@ const TransactionHistoryPage = () => {
   const queryClient = useQueryClient();
   const listRef = useRef<FlatList>(null);
 
-  // State variables
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     size: 20,
@@ -80,7 +78,6 @@ const TransactionHistoryPage = () => {
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  // Define the query function
   const fetchTransactions = async ({ pageParam = 1 }) => {
     const queryParams = [
       `page=${pageParam}`,
@@ -101,7 +98,6 @@ const TransactionHistoryPage = () => {
     return response.data;
   };
 
-  // Use React Query's useInfiniteQuery hook
   const {
     data,
     error,
@@ -120,12 +116,10 @@ const TransactionHistoryPage = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Handle search
   const handleSearch = () => {
     refetch();
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setFilters({
       size: 20,
@@ -206,13 +200,11 @@ const TransactionHistoryPage = () => {
     }
   };
 
-  // Flatten the paginated data for FlatList
   const transactions = data?.pages?.flatMap((page) => page.data) || [];
 
   const renderTransactionItem = ({ item }: { item: Transaction }) => {
     const isIncome = item.transaction_type === 'topup';
     
-    // Determine which color set to use
     let colorSet;
     if (isIncome) {
       colorSet = transactionColors.topup;
@@ -387,7 +379,6 @@ const TransactionHistoryPage = () => {
                       setFilters((prev) => ({
                         ...prev,
                         transaction_type: itemValue,
-                        // Clear dependent filters
                         transfer_category:
                           itemValue === 'transfer'
                             ? prev.transfer_category

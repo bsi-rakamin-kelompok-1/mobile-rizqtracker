@@ -15,8 +15,6 @@ const useAxiosPrivate = () => {
         const isPublicPath = publicPaths.some(path => requestPath.includes(path));
 
         if (!isPublicPath && !config.headers.Authorization) {
-          console.log(`Adding auth token to request: ${config.url}, token: ${authStore.token}`);
-          
           config.headers.Authorization = `Bearer ${authStore.token}`;
         }
 

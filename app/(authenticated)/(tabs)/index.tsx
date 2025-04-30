@@ -81,7 +81,6 @@ export default function AuthenticatedHome() {
 
           if (response.data.success) {
             authStore.setUser(response.data.data);
-            console.log('User data refreshed to ensure accurate balance');
           }
         } catch (error) {
           console.error('Error refreshing user data:', error);

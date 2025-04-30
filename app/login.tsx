@@ -82,11 +82,6 @@ const Page = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  useEffect(() => {
-    console.log('authStoreLoginPage: ', authStore);
-
-  }, [authStore]);
-
   const handleLogin = async () => {
     if (!validateInputs()) {
       return;
@@ -99,12 +94,11 @@ const Page = () => {
       // Show success toast
       toast.success('Login berhasil!', {
         description: `Selamat datang, ${user.full_name}!`,
-        duration: 2000,
-        onDismiss: () => router.replace('./(authenticated)/(tabs)'),
+        duration: 1000,
       });
 
       // Navigate to authenticated area
-      router.replace('./(authenticated)/(tabs)');
+      router.replace('/(authenticated)/(tabs)');
     } catch (error: any) {
       // Handle specific error responses
       const errorMessage =
@@ -112,13 +106,10 @@ const Page = () => {
         error.response?.data?.errors?.[0] ||
         'Login gagal';
 
-      console.log('Login error: ', error);
-      
-
       // Show error toast
       toast.error('Login gagal', {
         description: errorMessage,
-        duration: 4000,
+        duration: 2000,
       });
     }
   };
