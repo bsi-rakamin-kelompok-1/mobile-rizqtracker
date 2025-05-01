@@ -4,7 +4,7 @@
     "slug": "rizqtracker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Logo.png",
+    "icon": "./assets/images/Logo1024.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/Logo.png",
+        "foregroundImage": "./assets/images/Logo1024.png",
         "backgroundColor": "#61B7AA"
       },
       "package": "com.mioshakt.rizqtracker"

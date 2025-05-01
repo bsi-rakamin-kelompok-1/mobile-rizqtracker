@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,10 +23,17 @@ import {
   formatPaymentMethod,
   formatTransactionCategory,
 } from '@/utils/formatters';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Picker } from '@react-native-picker/picker';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { useAuthStore } from '@/store/auth-store';
 
 interface Transaction {
   id: string;
@@ -59,11 +66,24 @@ interface TransactionResponse {
   data: Transaction[];
 }
 
+// Add this helper function for formatting period strings to Indonesian month names
+const formatPeriod = (periodString: string): string => {
+  try {
+    const [year, month] = periodString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return format(date, 'MMMM yyyy', { locale: id });
+  } catch (error) {
+    return periodString;
+  }
+};
+
 const TransactionHistoryPage = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const axios = useAxiosPrivate();
   const toast = useAdaptiveToast();
+  const { user } = useAuthStore();
+
   const queryClient = useQueryClient();
   const listRef = useRef<FlatList>(null);
 
@@ -77,6 +97,8 @@ const TransactionHistoryPage = () => {
     topup_method: '',
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const fetchTransactions = async ({ pageParam = 1 }) => {
     const queryParams = [
@@ -116,6 +138,18 @@ const TransactionHistoryPage = () => {
     refetchOnWindowFocus: false,
   });
 
+  // Add this query to fetch available periods
+  const { data: periodsData } = useQuery({
+    queryKey: ['transaction-periods'],
+    queryFn: async () => {
+      const response = await axios.get('/v1/transactions/available-periods');
+      return response.data;
+    },
+  });
+
+  // Available periods from the API response
+  const availablePeriods = periodsData || [];
+
   const handleSearch = () => {
     refetch();
   };
@@ -132,23 +166,79 @@ const TransactionHistoryPage = () => {
     setSearch('');
     setIsFilterVisible(false);
 
-    // Invalidate and refetch data
     queryClient.invalidateQueries({
       queryKey: ['transactions'],
     });
   };
 
-  // Apply filters
   const applyFilters = () => {
     setIsFilterVisible(false);
     refetch();
   };
 
-  // Helper methods for transaction display
-  const getTransactionIcon = (transaction: Transaction): string => {
+  const downloadReport = useCallback(async () => {
+    if (!selectedPeriod) {
+      toast.error('Pilih periode terlebih dahulu');
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+
+      const response = await axios.get(
+        `/v1/transactions/generate-pdf?period=${selectedPeriod}`,
+        {
+          responseType: 'blob',
+        }
+      );
+
+      const fileName = `laporan-transaksi-${selectedPeriod}.pdf`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      const fr = new FileReader();
+      fr.onload = async () => {
+        try {
+          const base64data = (fr.result as string).split(',')[1];
+
+          await FileSystem.writeAsStringAsync(fileUri, base64data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          await Sharing.shareAsync(fileUri, {
+            UTI: 'com.adobe.pdf',
+            mimeType: 'application/pdf',
+          });
+
+          toast.success('Laporan berhasil diunduh');
+        } catch (error) {
+          console.error('Error saving file:', error);
+          toast.error('Gagal menyimpan laporan');
+        } finally {
+          setIsDownloading(false);
+        }
+      };
+
+      fr.onerror = () => {
+        toast.error('Gagal memproses file');
+        setIsDownloading(false);
+      };
+
+      fr.readAsDataURL(response.data);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error('Gagal mengunduh laporan');
+      setIsDownloading(false);
+    }
+  }, [selectedPeriod, axios, toast]);
+
+  const getTransactionIcon = (transaction: Transaction, isRecipient = false): string => {
     if (transaction.transaction_type === 'topup') {
       return 'arrow-up-circle';
     } else if (transaction.transaction_type === 'transfer') {
+      if (isRecipient) {
+        return 'arrow-down-circle';
+      }
+      
       switch (transaction.transfer_category) {
         case 'needs':
           return 'basket';
@@ -167,26 +257,27 @@ const TransactionHistoryPage = () => {
     return 'cash';
   };
 
-  const getTransactionTitle = (transaction: Transaction): string => {
+  const getTransactionTitle = (transaction: Transaction, isRecipient = false): string => {
     if (transaction.transaction_type === 'topup') {
-      return `Top Up via ${formatPaymentMethod(
-        transaction.topup_method || ''
-      )}`;
-    } else {
-      return `Transfer - ${formatTransactionCategory(
-        transaction.transfer_category || ''
-      )}`;
+      return `Top Up via ${formatPaymentMethod(transaction.topup_method || '')}`;
+    } else if (transaction.transaction_type === 'transfer') {
+      if (isRecipient) {
+        return `Transfer Masuk - ${formatTransactionCategory(transaction.transfer_category || '')}`;
+      }
+      return `Transfer - ${formatTransactionCategory(transaction.transfer_category || '')}`;
     }
+    return 'Transaksi';
   };
 
-  const getTransactionSubtitle = (transaction: Transaction): string => {
+  const getTransactionSubtitle = (transaction: Transaction, isRecipient = false): string => {
     if (transaction.transaction_type === 'topup') {
-      return `${transaction.reference_number}`;
-    } else if (
-      transaction.transaction_type === 'transfer' &&
-      transaction.recipient_full_name
-    ) {
-      return `Ke: ${transaction.recipient_full_name}`;
+      return transaction.reference_number;
+    } else if (transaction.transaction_type === 'transfer') {
+      if (isRecipient && transaction.sender_full_name) {
+        return `Dari: ${transaction.sender_full_name}`;
+      } else if (transaction.recipient_full_name) {
+        return `Ke: ${transaction.recipient_full_name}`;
+      }
     }
     return transaction.reference_number;
   };
@@ -203,18 +294,24 @@ const TransactionHistoryPage = () => {
   const transactions = data?.pages?.flatMap((page) => page.data) || [];
 
   const renderTransactionItem = ({ item }: { item: Transaction }) => {
-    const isIncome = item.transaction_type === 'topup';
-    
+    const isRecipient =
+      item.transaction_type === 'transfer' &&
+      user?.account?.account_number === item.recipient_account_number;
+
+    const isIncome = item.transaction_type === 'topup' || isRecipient;
+
     let colorSet;
     if (isIncome) {
       colorSet = transactionColors.topup;
     } else if (item.transfer_category) {
-      colorSet = transactionColors[item.transfer_category as keyof typeof transactionColors] || 
-                transactionColors.default;
+      colorSet =
+        transactionColors[
+          item.transfer_category as keyof typeof transactionColors
+        ] || transactionColors.default;
     } else {
       colorSet = transactionColors.default;
     }
-  
+
     return (
       <View style={styles.transactionItem}>
         <View
@@ -224,25 +321,25 @@ const TransactionHistoryPage = () => {
           ]}
         >
           <Ionicons
-            name={getTransactionIcon(item) as any}
+            name={getTransactionIcon(item, isRecipient) as any}
             size={18}
             color={colorSet.icon}
           />
         </View>
-  
+
         <View style={styles.transactionDetails}>
           <Text style={styles.transactionTitle}>
-            {getTransactionTitle(item)}
+            {getTransactionTitle(item, isRecipient)}
           </Text>
           <Text style={styles.transactionSubtitle}>
-            {getTransactionSubtitle(item)}
+            {getTransactionSubtitle(item, isRecipient)}
           </Text>
           <Text style={styles.transactionDate}>
             {formatDate(item.created_at)}
           </Text>
           {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
         </View>
-  
+
         <View style={styles.amountContainer}>
           <Text
             style={[
@@ -313,7 +410,53 @@ const TransactionHistoryPage = () => {
         </View>
 
         <View style={styles.content}>
-          {/* Search Bar */}
+          <View style={styles.reportContainer}>
+            <Text style={styles.reportTitle}>Laporan Transaksi Bulanan</Text>
+            <View style={styles.reportActionRow}>
+              <View style={styles.periodPickerContainer}>
+                <Picker
+                  selectedValue={selectedPeriod}
+                  style={styles.periodPicker}
+                  itemStyle={styles.periodPickerItem}
+                  onValueChange={(itemValue) => setSelectedPeriod(itemValue)}
+                >
+                  <Picker.Item label='Pilih Periode' value='' />
+                  {availablePeriods.map((period: string) => (
+                    <Picker.Item
+                      key={period}
+                      label={formatPeriod(period)}
+                      value={period}
+                    />
+                  ))}
+                </Picker>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.downloadButton,
+                  (!selectedPeriod || isDownloading) && styles.disabledButton,
+                ]}
+                onPress={downloadReport}
+                disabled={!selectedPeriod || isDownloading}
+              >
+                {isDownloading ? (
+                  <ActivityIndicator size='small' color='#FFFFFF' />
+                ) : (
+                  <>
+                    <Ionicons
+                      name='download-outline'
+                      size={18}
+                      color='white'
+                      style={styles.downloadIcon}
+                    />
+                    <Text style={styles.downloadButtonText}>Unduh</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Search Bar */}t
           <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
               <Ionicons
@@ -722,6 +865,61 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gray,
     textAlign: 'center',
+  },
+  reportContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 12,
+  },
+  reportActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  periodPickerContainer: {
+    flex: 1,
+    backgroundColor: '#F0F9F6',
+    borderRadius: 8,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    overflow: 'hidden',
+  },
+  periodPicker: {
+    width: '100%',
+  },
+  periodPickerItem: {
+    fontSize: 14,
+  },
+  downloadButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  downloadIcon: {
+    marginRight: 6,
+  },
+  downloadButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  disabledButton: {
+    backgroundColor: '#AAAAAA',
+    opacity: 0.7,
   },
 });
 
