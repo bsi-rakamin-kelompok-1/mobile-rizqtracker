@@ -148,14 +148,22 @@ const ProfilePage = () => {
       });
 
       if (response.data.success) {
-        setAvatarUrl(response.data.data);
+        let newAvatarUrl = response.data.data;
+
+        if (newAvatarUrl && newAvatarUrl.startsWith('http://')) {
+          newAvatarUrl = newAvatarUrl.replace('http://', 'https://');
+        }
+
+        newAvatarUrl = `${newAvatarUrl}${
+          newAvatarUrl.includes('?') ? '&' : '?'
+        }t=${Date.now()}`;
+
+        setAvatarUrl(newAvatarUrl);
         setUser({
           ...user!,
-          avatar_url: response.data.data,
+          avatar_url: newAvatarUrl,
         });
-        toast.success('Avatar berhasil diperbarui', {
-          duration: 1000,
-        });
+        toast.success('Avatar berhasil diperbarui');
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -198,141 +206,147 @@ const ProfilePage = () => {
   return (
     <>
       <StatusBar barStyle='light-content' backgroundColor={Colors.background} />
-    
-    <SafeAreaView style={styles.container}>
-      {/* Avatar Modal */}
-      <Modal
-        visible={isAvatarModalVisible}
-        transparent={true}
-        animationType='fade'
-        onRequestClose={() => setIsAvatarModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsAvatarModalVisible(false)}
+
+      <SafeAreaView style={styles.container}>
+        {/* Avatar Modal */}
+        <Modal
+          visible={isAvatarModalVisible}
+          transparent={true}
+          animationType='fade'
+          onRequestClose={() => setIsAvatarModalVisible(false)}
         >
-          <View style={styles.modalContent}>
-            <ExpoImage
-              source={
-                avatarUrl
-                  ? { uri: avatarUrl }
-                  : require('@/assets/images/cat-wink.png')
-              }
-              key={avatarUrl}
-              style={styles.modalAvatarImage}
-              contentFit='contain'
-              transition={{
-                duration: 1000,
-                timing: 'ease-in-out',
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerLeft} />
-          <Text style={styles.headerTitle}>Profil</Text>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name='log-out-outline' size={24} color='white' />
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsAvatarModalVisible(false)}
+          >
+            <View style={styles.modalContent}>
+              <ExpoImage
+                source={
+                  avatarUrl
+                    ? { uri: avatarUrl }
+                    : require('@/assets/images/cat-wink.png')
+                }
+                key={avatarUrl}
+                style={styles.modalAvatarImage}
+                contentFit='contain'
+                transition={{
+                  duration: 1000,
+                  timing: 'ease-in-out',
+                }}
+              />
+            </View>
           </TouchableOpacity>
-        </View>
+        </Modal>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Profile Image */}
-          <View style={styles.imageContainer}>
-            {isUploadingAvatar ? (
-              <View style={styles.avatarLoadingContainer}>
-                <ActivityIndicator color={Colors.primary} size='large' />
-              </View>
-            ) : (
-              <TouchableOpacity onPress={handleAvatarClick}>
-                <ExpoImage
-                  source={
-                    avatarUrl
-                      ? { uri: avatarUrl }
-                      : require('@/assets/images/cat-wink.png')
-                  }
-                  key={avatarUrl}
-                  style={styles.profileImage}
-                  contentFit='cover'
-                  transition={{
-                    duration: 1000,
-                    timing: 'ease-in-out',
-                  }}
-                />
-              </TouchableOpacity>
-            )}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.header}>
+            <View style={styles.headerLeft} />
+            <Text style={styles.headerTitle}>Profil</Text>
             <TouchableOpacity
-              style={styles.editImageButton}
-              onPress={handlePickImage}
-              disabled={isUploadingAvatar}
+              style={styles.logoutButton}
+              onPress={handleLogout}
             >
-              <Ionicons name='camera' size={20} color='white' />
+              <Ionicons name='log-out-outline' size={24} color='white' />
             </TouchableOpacity>
           </View>
 
-          {/* Form Fields */}
-          <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Nama Lengkap</Text>
-              <View style={styles.inputWrapper}>
-                <Input
-                  value={fullName}
-                  onChangeText={setFullName}
-                  style={styles.input}
-                  placeholder='Masukkan nama lengkap'
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <View style={styles.inputWrapper}>
-                <Input
-                  value={email}
-                  editable={false}
-                  style={[styles.input, styles.disabledInput]}
-                  keyboardType='email-address'
-                  autoCapitalize='none'
-                />
-              </View>
-              <Text style={styles.helperText}>Email tidak dapat diubah</Text>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>No HP</Text>
-              <View style={styles.inputWrapper}>
-                <Input
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  style={styles.input}
-                  keyboardType='phone-pad'
-                  placeholder='Contoh: 628123456789'
-                />
-              </View>
-            </View>
-
-            <Button
-              style={[styles.updateButton, isUpdating && styles.disabledButton]}
-              onPress={handleUpdateProfile}
-              disabled={isUpdating}
-            >
-              {isUpdating ? (
-                <ActivityIndicator color='white' size='small' />
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* Profile Image */}
+            <View style={styles.imageContainer}>
+              {isUploadingAvatar ? (
+                <View style={styles.avatarLoadingContainer}>
+                  <ActivityIndicator color={Colors.primary} size='large' />
+                </View>
               ) : (
-                <Text style={styles.updateButtonText}>Perbaharui Profil</Text>
+                <TouchableOpacity onPress={handleAvatarClick}>
+                  <ExpoImage
+                    source={
+                      avatarUrl
+                        ? { uri: avatarUrl }
+                        : require('@/assets/images/cat-wink.png')
+                    }
+                    key={avatarUrl}
+                    style={styles.profileImage}
+                    contentFit='cover'
+                    transition={{
+                      duration: 1000,
+                      timing: 'ease-in-out',
+                    }}
+                  />
+                </TouchableOpacity>
               )}
-            </Button>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <TouchableOpacity
+                style={styles.editImageButton}
+                onPress={handlePickImage}
+                disabled={isUploadingAvatar}
+              >
+                <Ionicons name='camera' size={20} color='white' />
+              </TouchableOpacity>
+            </View>
+
+            {/* Form Fields */}
+            <View style={styles.formContainer}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nama Lengkap</Text>
+                <View style={styles.inputWrapper}>
+                  <Input
+                    value={fullName}
+                    onChangeText={setFullName}
+                    style={styles.input}
+                    placeholder='Masukkan nama lengkap'
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={styles.inputWrapper}>
+                  <Input
+                    value={email}
+                    editable={false}
+                    style={[styles.input, styles.disabledInput]}
+                    keyboardType='email-address'
+                    autoCapitalize='none'
+                  />
+                </View>
+                <Text style={styles.helperText}>Email tidak dapat diubah</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>No HP</Text>
+                <View style={styles.inputWrapper}>
+                  <Input
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    style={styles.input}
+                    keyboardType='phone-pad'
+                    placeholder='Contoh: 628123456789'
+                  />
+                </View>
+              </View>
+
+              <Button
+                style={[
+                  styles.updateButton,
+                  isUpdating && styles.disabledButton,
+                ]}
+                onPress={handleUpdateProfile}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <ActivityIndicator color='white' size='small' />
+                ) : (
+                  <Text style={styles.updateButtonText}>Perbaharui Profil</Text>
+                )}
+              </Button>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 };
