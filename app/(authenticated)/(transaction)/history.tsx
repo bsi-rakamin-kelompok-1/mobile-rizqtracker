@@ -431,12 +431,13 @@ const TransactionHistoryPage = () => {
                   itemStyle={styles.periodPickerItem}
                   onValueChange={(itemValue) => setSelectedPeriod(itemValue)}
                 >
-                  <Picker.Item label='Pilih Periode' value='' />
+                  <Picker.Item label='Pilih Periode' value='' style={{fontSize: 14}} />
                   {availablePeriods.map((period: string) => (
                     <Picker.Item
                       key={period}
                       label={formatPeriod(period)}
                       value={period}
+                      style={{fontSize: 14}}
                     />
                   ))}
                 </Picker>
@@ -466,7 +467,7 @@ const TransactionHistoryPage = () => {
               </TouchableOpacity>
             </View>
           </View>
-          {/* Search Bar */}t
+          {/* Search Bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
               <Ionicons
@@ -882,7 +883,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   reportTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.dark,
     marginBottom: 12,
