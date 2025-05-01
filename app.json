@@ -10,12 +10,10 @@
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#61B7AA"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mioshakt.rizqtracker"
@@ -23,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/Logo.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#61B7AA"
       },
       "package": "com.mioshakt.rizqtracker"
     },
@@ -37,9 +35,7 @@
       [
         "expo-font",
         {
-          "fonts": [
-            "./assets/fonts/SF-Pro.ttf"
-          ]
+          "fonts": ["./assets/fonts/SF-Pro.ttf"]
         }
       ],
       [
