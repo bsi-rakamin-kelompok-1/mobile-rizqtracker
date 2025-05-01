@@ -1,3 +1,6 @@
+import { format, parseISO } from "date-fns";
+import { id } from "date-fns/locale";
+
 /**
  * Formats a snake_case or underscore_case string to Title Case
  * Example: "debit_card" becomes "Debit Card"
@@ -61,4 +64,15 @@ export const formatTransactionCategory = (category: string): string => {
   };
 
   return categoryMappings[category] || formatSnakeCase(category);
+};
+
+export const formatUTCDate = (dateString: string, formatString: string): string => {
+  try {
+    const utcDateString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+    const date = parseISO(utcDateString);
+    return format(date, formatString, { locale: id });
+  } catch (error) {
+    console.error('Date formatting error:', error, dateString);
+    return dateString;
+  }
 };

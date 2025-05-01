@@ -22,6 +22,7 @@ import {
   formatCurrency,
   formatPaymentMethod,
   formatTransactionCategory,
+  formatUTCDate,
 } from '@/utils/formatters';
 import { format, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -34,6 +35,7 @@ import {
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '@/store/auth-store';
+import { parseISO } from 'date-fns';
 
 interface Transaction {
   id: string;
@@ -231,14 +233,17 @@ const TransactionHistoryPage = () => {
     }
   }, [selectedPeriod, axios, toast]);
 
-  const getTransactionIcon = (transaction: Transaction, isRecipient = false): string => {
+  const getTransactionIcon = (
+    transaction: Transaction,
+    isRecipient = false
+  ): string => {
     if (transaction.transaction_type === 'topup') {
       return 'arrow-up-circle';
     } else if (transaction.transaction_type === 'transfer') {
       if (isRecipient) {
         return 'arrow-down-circle';
       }
-      
+
       switch (transaction.transfer_category) {
         case 'needs':
           return 'basket';
@@ -257,19 +262,31 @@ const TransactionHistoryPage = () => {
     return 'cash';
   };
 
-  const getTransactionTitle = (transaction: Transaction, isRecipient = false): string => {
+  const getTransactionTitle = (
+    transaction: Transaction,
+    isRecipient = false
+  ): string => {
     if (transaction.transaction_type === 'topup') {
-      return `Top Up via ${formatPaymentMethod(transaction.topup_method || '')}`;
+      return `Top Up via ${formatPaymentMethod(
+        transaction.topup_method || ''
+      )}`;
     } else if (transaction.transaction_type === 'transfer') {
       if (isRecipient) {
-        return `Transfer Masuk - ${formatTransactionCategory(transaction.transfer_category || '')}`;
+        return `Transfer Masuk - ${formatTransactionCategory(
+          transaction.transfer_category || ''
+        )}`;
       }
-      return `Transfer - ${formatTransactionCategory(transaction.transfer_category || '')}`;
+      return `Transfer - ${formatTransactionCategory(
+        transaction.transfer_category || ''
+      )}`;
     }
     return 'Transaksi';
   };
 
-  const getTransactionSubtitle = (transaction: Transaction, isRecipient = false): string => {
+  const getTransactionSubtitle = (
+    transaction: Transaction,
+    isRecipient = false
+  ): string => {
     if (transaction.transaction_type === 'topup') {
       return transaction.reference_number;
     } else if (transaction.transaction_type === 'transfer') {
@@ -280,15 +297,6 @@ const TransactionHistoryPage = () => {
       }
     }
     return transaction.reference_number;
-  };
-
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return format(date, 'dd MMM yyyy, HH:mm', { locale: id });
-    } catch {
-      return dateString;
-    }
   };
 
   const transactions = data?.pages?.flatMap((page) => page.data) || [];
@@ -335,7 +343,10 @@ const TransactionHistoryPage = () => {
             {getTransactionSubtitle(item, isRecipient)}
           </Text>
           <Text style={styles.transactionDate}>
-            {formatDate(item.created_at)}
+            {formatUTCDate(
+              item.created_at,
+              'dd MMMM yyyy HH:mm'
+            )}
           </Text>
           {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
         </View>
@@ -455,7 +466,6 @@ const TransactionHistoryPage = () => {
               </TouchableOpacity>
             </View>
           </View>
-
           {/* Search Bar */}t
           <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
@@ -489,7 +499,6 @@ const TransactionHistoryPage = () => {
               )}
             </View>
           </View>
-
           {/* Filter Section */}
           {isFilterVisible && (
             <View style={styles.filterContainer}>
@@ -609,7 +618,6 @@ const TransactionHistoryPage = () => {
               </View>
             </View>
           )}
-
           {/* Transaction List with Infinite Scrolling */}
           {status === 'pending' ? (
             <View style={styles.loaderContainer}>

@@ -17,7 +17,7 @@ import Header from '@/components/home/Header';
 import { useAuthStore } from '@/store/auth-store';
 import BalanceCard from '@/components/BalanceCard';
 import useAxiosPrivate from '@/hooks/use-axios-private';
-import { formatPaymentMethod } from '@/utils/formatters';
+import { formatPaymentMethod, formatUTCDate } from '@/utils/formatters';
 import CashflowContainer from '@/components/home/CashflowContainer';
 import {
   CashflowSummary,
@@ -26,6 +26,8 @@ import {
   FormattedTransaction,
   IncomeDetails,
 } from '@/types/cashflow';
+import { format, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 export default function AuthenticatedHome() {
   const router = useRouter();
@@ -103,11 +105,7 @@ export default function AuthenticatedHome() {
           ...item,
           type: 'topup',
           description: `Topup via ${formatPaymentMethod(item.topup_method)}`,
-          date: new Date(item.created_at).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
+          date: formatUTCDate(item.created_at, 'dd MMMM yyyy'),
           iconColor: transactionColors.topup.icon,
           backgroundColor: transactionColors.topup.background,
         })
@@ -118,11 +116,7 @@ export default function AuthenticatedHome() {
           ...item,
           type: 'transfer',
           description: `Transfer dari ${item.sender_full_name}`,
-          date: new Date(item.created_at).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
+          date: formatUTCDate(item.created_at, 'dd MMMM yyyy'),
           iconColor: transactionColors.transfer.icon,
           backgroundColor: transactionColors.transfer.background,
         })
@@ -146,11 +140,7 @@ export default function AuthenticatedHome() {
             ...item,
             type: category,
             description: `Transfer ke ${item.recipient_full_name}`,
-            date: new Date(item.created_at).toLocaleDateString('id-ID', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            }),
+            date: formatUTCDate(item.created_at, 'dd MMMM yyyy'),
             iconColor: categoryColors.icon,
             backgroundColor: categoryColors.background,
           }));

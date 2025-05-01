@@ -10,9 +10,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import Logo from '@/assets/images/Logo.svg';
-import { formatCurrency, formatSnakeCase, formatTransactionCategory } from '@/utils/formatters';
+import { formatCurrency, formatSnakeCase, formatTransactionCategory, formatUTCDate } from '@/utils/formatters';
+import { id } from 'date-fns/locale';
 
 const TransactionResultPage = () => {
   const router = useRouter();
@@ -28,22 +29,11 @@ const TransactionResultPage = () => {
   const notes = params.notes as string;
   const errorMessage = params.errorMessage as string;
 
-  // Transfer specific params
   const recipientAccount = params.recipient_account as string;
   const recipientName = params.recipient_name as string;
 
   const isSuccess = status === 'success';
   const isTransfer = transactionType === 'transfer';
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, 'dd MMM yyyy - HH:mm:ss');
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   const handleFinish = () => {
     router.replace('/(authenticated)/(tabs)');
@@ -81,7 +71,7 @@ const TransactionResultPage = () => {
           </Text>
 
           {isSuccess && createdAt && (
-            <Text style={styles.transactionDate}>{formatDate(createdAt)}</Text>
+            <Text style={styles.transactionDate}>{formatUTCDate(createdAt, 'dd MMMM yyyy HH:mm:ss')}</Text>
           )}
 
           {!isSuccess && errorMessage && (

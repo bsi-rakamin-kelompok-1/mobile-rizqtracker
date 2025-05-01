@@ -92,7 +92,6 @@ const Page = () => {
         duration: 2000,
       });
 
-      // Reset to first step after error
       setTimeout(() => {
         setStep('first');
         setFirstPin(null);

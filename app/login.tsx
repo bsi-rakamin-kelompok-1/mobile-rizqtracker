@@ -12,6 +12,8 @@ import {
   BackHandler,
   SafeAreaView,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,90 +106,92 @@ const Page = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={keyboardVerticalOffset}
-      >
-        <View style={styles.topSection}>
-          <Text style={styles.greeting}>Assalamualaikum sahabat!</Text>
-          <Text style={styles.subtitle}>
-            Masuk untuk memulai perjalanan keuanganmu!
-          </Text>
-        </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={keyboardVerticalOffset}
+        >
+          <View style={styles.topSection}>
+            <Text style={styles.greeting}>Assalamualaikum sahabat!</Text>
+            <Text style={styles.subtitle}>
+              Masuk untuk memulai perjalanan keuanganmu!
+            </Text>
+          </View>
 
-        <View style={styles.formContainer}>
-          <View style={styles.formContent}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <View style={styles.inputWrapper}>
-                <Input
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder='viona.amalia@gmail.com'
-                  keyboardType='email-address'
-                  autoCapitalize='none'
-                  style={styles.input}
-                />
-                {errors.email && (
-                  <Text style={styles.errorText}>{errors.email}</Text>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <Input
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder='••••••••'
-                  secureTextEntry={!showPassword}
-                  style={styles.input}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={Colors.gray}
+          <View style={styles.formContainer}>
+            <View style={styles.formContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={styles.inputWrapper}>
+                  <Input
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder='viona.amalia@gmail.com'
+                    keyboardType='email-address'
+                    autoCapitalize='none'
+                    style={styles.input}
                   />
-                </TouchableOpacity>
-                {errors.password && (
-                  <Text style={styles.errorText}>{errors.password}</Text>
-                )}
+                  {errors.email && (
+                    <Text style={styles.errorText}>{errors.email}</Text>
+                  )}
+                </View>
               </View>
-            </View>
 
-            <Button
-              style={styles.loginButton}
-              onPress={handleLogin}
-              disabled={authStore.isLoading}
-            >
-              {authStore.isLoading ? (
-                <ActivityIndicator color='white' />
-              ) : (
-                <Text style={styles.loginButtonText}>Masuk</Text>
-              )}
-            </Button>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <View style={styles.inputWrapper}>
+                  <Input
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder='••••••••'
+                    secureTextEntry={!showPassword}
+                    style={styles.input}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={Colors.gray}
+                    />
+                  </TouchableOpacity>
+                  {errors.password && (
+                    <Text style={styles.errorText}>{errors.password}</Text>
+                  )}
+                </View>
+              </View>
 
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>
-                Belum punya akun? Registrasi{' '}
-              </Text>
-              <Link href='./register' asChild>
-                <TouchableOpacity>
-                  <Text style={styles.registerLink}>disini</Text>
-                </TouchableOpacity>
-              </Link>
+              <Button
+                style={styles.loginButton}
+                onPress={handleLogin}
+                disabled={authStore.isLoading}
+              >
+                {authStore.isLoading ? (
+                  <ActivityIndicator color='white' />
+                ) : (
+                  <Text style={styles.loginButtonText}>Masuk</Text>
+                )}
+              </Button>
+
+              <View style={styles.registerContainer}>
+                <Text style={styles.registerText}>
+                  Belum punya akun? Registrasi{' '}
+                </Text>
+                <Link href='./register' asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.registerLink}>disini</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -198,8 +202,7 @@ const styles = StyleSheet.create({
   },
   topSection: {
     paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 60,
+    paddingBottom: 40,
   },
   greeting: {
     fontSize: 18,

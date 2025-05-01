@@ -37,6 +37,7 @@ const Transfer = () => {
   const { user } = useAuthStore();
   const params = useLocalSearchParams();
   const scannedAccount = params.scannedAccount as string;
+  const isQRCodeScan = Boolean(scannedAccount);
 
   const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
@@ -55,10 +56,8 @@ const Transfer = () => {
   }, []);
 
   useEffect(() => {
-    // If there's a scanned account from QR code, set it and verify it
     if (scannedAccount) {
       setAccountNumber(scannedAccount);
-      // Optionally verify account immediately
       verifyAccount(scannedAccount);
     }
   }, [scannedAccount]);
@@ -76,10 +75,9 @@ const Transfer = () => {
     }
   };
 
-  // Update handleAmountChange to clear errors when typing
   const handleAmountChange = (text: string) => {
     const numericValue = text.replace(/[^0-9]/g, '');
-    setAmountError(null); // Clear error when editing
+    setAmountError(null);
 
     if (numericValue) {
       const numericAmount = parseInt(numericValue, 10);
@@ -91,12 +89,13 @@ const Transfer = () => {
   };
 
   const handleSelectRecipient = (recipient: RecentRecipient) => {
+    if (isQRCodeScan) return;
+
     const recipientAccountNumber = recipient.account_number.toString();
 
     setAccountNumber(recipientAccountNumber.substring(0, 9));
   };
 
-  // Update handleTransfer to check minimum amount
   const handleTransfer = async () => {
     setAmountError(null);
 
@@ -121,7 +120,6 @@ const Transfer = () => {
       return;
     }
 
-    // Check minimum amount
     const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10);
     if (numericAmount < MINIMUM_AMOUNT) {
       setAmountError(
@@ -167,13 +165,10 @@ const Transfer = () => {
     }
   };
 
-  // Add this function to verify account on QR scan
   const verifyAccount = async (account: string) => {
     try {
       const response = await axios.get(`/v1/accounts/${account}`);
-      // If successful, maybe store the recipient name
       if (response.data.success && response.data.data) {
-        // You could store recipient info in state here if needed
         toast.success('Rekening terverifikasi', {
           description: `Penerima: ${response.data.data.full_name}`,
         });
@@ -189,7 +184,6 @@ const Transfer = () => {
     }
   };
 
-  // Generate avatar from name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -214,7 +208,6 @@ const Transfer = () => {
     }
   };
 
-  // Update button disabled check
   const isTransferButtonDisabled = () => {
     if (!accountNumber || !amount) return true;
 
@@ -260,11 +253,16 @@ const Transfer = () => {
             <View style={styles.formContainer}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nomor Rekening Tujuan</Text>
-                <View style={styles.accountInputContainer}>
+                <View
+                  style={[
+                    styles.accountInputContainer,
+                    isQRCodeScan ? styles.qrCodeInputContainer : {},
+                  ]}
+                >
                   <TextInput
                     style={[
                       styles.accountInput,
-                      scannedAccount ? styles.disabledInput : {},
+                      isQRCodeScan ? styles.disabledInput : {},
                     ]}
                     value={accountNumber}
                     onChangeText={handleAccountNumberChange}
@@ -272,15 +270,17 @@ const Transfer = () => {
                     placeholder='700500121'
                     placeholderTextColor='#AAAAAA'
                     maxLength={9}
-                    editable={!scannedAccount}
+                    editable={!isQRCodeScan}
                   />
-                  {scannedAccount && (
-                    <Ionicons
-                      name='qr-code'
-                      size={20}
-                      color={Colors.primary}
-                      style={styles.qrIcon}
-                    />
+                  {isQRCodeScan && (
+                    <View style={styles.qrIndicator}>
+                      <Ionicons
+                        name='qr-code'
+                        size={20}
+                        color={Colors.primary}
+                      />
+                      <Text style={styles.qrText}>QR Scan</Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -334,8 +334,8 @@ const Transfer = () => {
                           {
                             backgroundColor:
                               selectedCategory === category.id
-                                ? colorSet.icon 
-                                : colorSet.background, 
+                                ? colorSet.icon
+                                : colorSet.background,
                           },
                         ]}
                         onPress={() => setSelectedCategory(category.id)}
@@ -345,8 +345,8 @@ const Transfer = () => {
                           size={20}
                           color={
                             selectedCategory === category.id
-                              ? 'white' 
-                              : colorSet.icon 
+                              ? 'white'
+                              : colorSet.icon
                           }
                           style={styles.categoryIcon}
                         />
@@ -356,8 +356,8 @@ const Transfer = () => {
                             {
                               color:
                                 selectedCategory === category.id
-                                  ? 'white' 
-                                  : colorSet.icon, 
+                                  ? 'white'
+                                  : colorSet.icon,
                             },
                           ]}
                         >
@@ -370,8 +370,27 @@ const Transfer = () => {
               </View>
 
               <View style={styles.recentRecipientsContainer}>
-                <Text style={styles.label}>Penerima Terakhir</Text>
-                {loadingRecipients ? (
+                <View style={styles.labelContainer}>
+                  <Text style={styles.label}>Penerima Terakhir</Text>
+                  {isQRCodeScan && (
+                    <Text style={styles.disabledText}>
+                      (Nonaktif saat scan QR)
+                    </Text>
+                  )}
+                </View>
+
+                {isQRCodeScan ? (
+                  <View style={styles.disabledRecipientsContainer}>
+                    <Ionicons
+                      name='lock-closed'
+                      size={20}
+                      color={Colors.gray}
+                    />
+                    <Text style={styles.disabledRecipientsText}>
+                      Penerima sudah ditentukan dari QR Code
+                    </Text>
+                  </View>
+                ) : loadingRecipients ? (
                   <ActivityIndicator
                     color={Colors.primary}
                     style={styles.loadingIndicator}
@@ -482,6 +501,30 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 24,
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  disabledText: {
+    fontSize: 12,
+    color: Colors.gray,
+    fontStyle: 'italic',
+  },
+  disabledRecipientsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  disabledRecipientsText: {
+    color: Colors.gray,
+    fontSize: 14,
+    marginLeft: 8,
   },
   label: {
     fontSize: 14,
@@ -630,6 +673,24 @@ const styles = StyleSheet.create({
   disabledInput: {
     backgroundColor: '#F5F5F5',
     color: Colors.dark,
+  },
+  qrCodeInputContainer: {
+    borderWidth: 1,
+    borderColor: Colors.primaryMuted,
+  },
+  qrIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  qrText: {
+    fontSize: 12,
+    color: Colors.primary,
+    marginLeft: 4,
+    fontWeight: '500',
   },
   qrIcon: {
     position: 'absolute',

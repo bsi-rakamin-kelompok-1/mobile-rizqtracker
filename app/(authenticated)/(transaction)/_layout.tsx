@@ -12,7 +12,7 @@ export default function TransactionLayout() {
       }}
     >
       <Stack.Screen
-        name='topup-pin'
+        name='transaction-pin'
         options={{
           headerShown: false,
           animation: 'slide_from_bottom',
@@ -20,7 +20,7 @@ export default function TransactionLayout() {
       />
 
       <Stack.Screen
-        name='topup-result'
+        name='transaction-result'
         options={{
           headerShown: false,
           animation: 'fade',
